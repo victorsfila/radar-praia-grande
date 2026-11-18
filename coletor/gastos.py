@@ -49,9 +49,31 @@ def separa_credor(s):
     return nome, doc
 
 
+from datetime import date as _date
+
+
+def _d(br):
+    try:
+        d, m, a = br.split("/")
+        return _date(int(a), int(m), int(d))
+    except Exception:
+        return None
+
+
 def build_gastos(raw_gastos, out):
     if not raw_gastos:
         return None
+    raw_gastos = dict(raw_gastos)
+    extra = raw_gastos.pop("contratos_extra", {}) or {}
+    docs = dict(raw_gastos.pop("docs", {}) or {})
+    # PDFs já conhecidos de execuções anteriores continuam valendo (o robô não consegue abrir a aba de documentos)
+    try:
+        ant = json.load(open(os.path.join(out, "dados", "gastos.json"), encoding="utf-8"))
+        for c in ant.get("contratos", []):
+            if c.get("pdfs") and c["a"] + "-" + c["n"] not in docs:
+                docs[c["a"] + "-" + c["n"]] = c["pdfs"]
+    except Exception:
+        pass
     anos = {}
     empenhos, contratos, diarias = [], [], []
     for ano, mods in sorted(raw_gastos.items()):
@@ -79,8 +101,7 @@ def build_gastos(raw_gastos, out):
             if cat != "Pessoal, encargos e benefícios":
                 mod_v[modal][0] += 1; mod_v[modal][1] += emp
                 f = forn[(nome, doc)]; f[0] += emp; f[1] += pago; f[2] += 1
-        for c in mods.get("CTR", []):
-            nome, doc = separa_credor(c.get("Fornecedor", ""))
+        for c in []:
             contratos.append({"a": ano, "n": c.get("Nro", ""), "t": c.get("Tipo", ""), "f": nome, "doc": doc, "ini": c.get("Data Inicial", ""), "fim": c.get("Data final", ""),
                               "vc": round(num(c.get("Valor Contratado")), 2), "ve": round(num(c.get("Valor Empenhado")), 2), "vp": round(num(c.get("Valor Pago")), 2)})
         por_vgm = defaultdict(list)
@@ -96,8 +117,34 @@ def build_gastos(raw_gastos, out):
                      "modalidades": {k: [v[0], round(v[1], 2)] for k, v in sorted(mod_v.items(), key=lambda x: -x[1][1])},
                      "fornecedores": [[k[0], k[1], round(v[0], 2), round(v[1], 2), v[2]] for k, v in sorted(forn.items(), key=lambda x: -x[1][0])[:40]],
                      "n_contratos": sum(1 for c in contratos if c["a"] == ano)}
+    todos_ctr = {}
+    for ano, lst in list(extra.items()) + [(a, m.get("CTR", [])) for a, m in raw_gastos.items()]:
+        for c in lst:
+            todos_ctr[(str(c.get("Ano", ano)), c.get("Nro", ""), c.get("Fornecedor", ""))] = c
+    for (ano, nro, _f), c in sorted(todos_ctr.items()):
+        nome, doc = separa_credor(c.get("Fornecedor", ""))
+        contratos.append({"a": ano, "n": nro, "t": c.get("Tipo", ""), "f": nome, "doc": doc, "ini": c.get("Data Inicial", ""), "fim": c.get("Data final", ""),
+                          "vc": round(num(c.get("Valor Contratado")), 2), "ve": round(num(c.get("Valor Empenhado")), 2), "vp": round(num(c.get("Valor Pago")), 2),
+                          "pdfs": docs.get(f"{ano}-{nro}", [])})
+    for a in anos:
+        anos[a]["n_contratos"] = sum(1 for c in contratos if c["a"] == a)
+    # liga cada gasto ao contrato do mesmo fornecedor (CNPJ) vigente na data do empenho
+    por_doc = defaultdict(list)
+    for i, c in enumerate(contratos):
+        if c["doc"]:
+            por_doc[c["doc"]].append(i)
+    ligados = 0
+    for e in empenhos:
+        de = _d(e["dt"])
+        cands = []
+        for i in por_doc.get(e["doc"], []):
+            c = contratos[i]; ini, fim = _d(c["ini"]), _d(c["fim"])
+            if de and ini and fim and ini <= de and (de - fim).days <= 60:
+                cands.append((ini, i))
+        if cands:
+            e["ct"] = max(cands)[1]; ligados += 1
     empenhos.sort(key=lambda e: (e["a"], e["dt"][6:] + e["dt"][3:5] + e["dt"][:2]), reverse=True)
-    dados = {"anos": anos, "contratos": contratos, "empenhos": empenhos, "diarias": diarias, "portal": PORTAL + "tdaportalclient.aspx?418"}
+    dados = {"ligados": ligados, "anos": anos, "contratos": contratos, "empenhos": empenhos, "diarias": diarias, "portal": PORTAL + "tdaportalclient.aspx?418"}
     with open(os.path.join(out, "dados", "gastos.json"), "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, separators=(",", ":"))
     return {a: {"empenhado": v["empenhado"], "n_empenhos": v["n_empenhos"], "n_contratos": v["n_contratos"]} for a, v in anos.items()}

@@ -174,6 +174,15 @@ def gastos(anos):
             else:
                 raise RuntimeError(f"falhou: gastos {ano} {mod}")
             time.sleep(PAUSA)
+    # contratos de anos anteriores que ainda podem gerar pagamentos
+    out["contratos_extra"] = {}
+    for ano in range(min(anos) - 4, min(anos)):
+        try:
+            r = S.get(f"{PORTAL_API}&exe={ano}&mod=CTR", timeout=120)
+            out["contratos_extra"][str(ano)] = r.json().get("Valores", []) if r.text.strip() else []
+        except Exception as e:  # noqa
+            print(f"  contratos {ano}: {e}", file=sys.stderr)
+        time.sleep(PAUSA)
     return out
 
 

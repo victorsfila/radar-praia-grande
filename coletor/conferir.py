@@ -37,6 +37,8 @@ if antigo.get("n_votacoes") and n_vot < antigo["n_votacoes"] * 0.95:
     falha(f"votações caíram de {antigo['n_votacoes']} para {n_vot}")
 G = novo.get("gastos", {})
 for ano, mods in G.items():
+    if not ano.isdigit():
+        continue
     if not mods.get("DSP"):
         falha(f"despesas de {ano} vieram vazias")
 ant_g = antigo.get("gastos") or {}
