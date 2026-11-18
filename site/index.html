@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radar Praia Grande · O que cada vereador faz</title>
+<meta name="description" content="O que cada vereador de Praia Grande-SP faz, só com dados oficiais da Câmara: presença nas sessões e propostas apresentadas.">
+<style>
+  :root{
+    --ink:#14213d; --ink-2:#4a5568; --ink-3:#718096; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f7f9;
+    --accent:#0b6e4f; --accent-soft:#e7f3ee; --warn:#8a5a00; --warn-soft:#fff6e0; --link:#1d4ed8;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
+  a{color:var(--link)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px}
+  header.top{border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5}
+  header.top .wrap{display:flex;align-items:center;gap:12px;height:58px}
+  .logo{font-weight:800;letter-spacing:-.02em;font-size:20px;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px}
+  .logo .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  nav.menu{margin-left:auto;display:flex;gap:16px;font-size:15px}
+  nav.menu a{color:var(--ink-2);text-decoration:none}
+  nav.menu a.on{color:var(--ink);font-weight:700}
+  h1{font-size:28px;line-height:1.2;letter-spacing:-.02em;margin:28px 0 8px}
+  h2{font-size:21px;margin:32px 0 10px;letter-spacing:-.01em}
+  h3{font-size:17px;margin:0}
+  .lead{color:var(--ink-2);margin:0 0 18px}
+  .aviso{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:15px;margin:16px 0}
+  .aviso b{color:#6b4400}
+  .nota{font-size:14px;color:var(--ink-3)}
+  input.busca,select{width:100%;font:inherit;padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:var(--ink)}
+  .ctrl{display:grid;grid-template-columns:1fr auto;gap:10px;margin:14px 0}
+  .ctrl select{width:auto}
+  .cards{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .card{display:flex;gap:14px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:inherit;background:#fff}
+  .card:hover{border-color:#94a3b8}
+  .foto{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--soft);flex:none}
+  .foto.g{width:96px;height:96px}
+  .card .nome{font-weight:700}
+  .card .sub{font-size:14px;color:var(--ink-3)}
+  .card .nums{margin-left:auto;text-align:right;font-size:14px;color:var(--ink-2);white-space:nowrap}
+  .card .nums b{font-size:17px;color:var(--ink)}
+  .mini{font-size:13px;color:var(--ink-2);margin-top:2px}
+  .cidade{border:1px solid var(--line);border-radius:12px;padding:14px;margin:18px 0}
+  .cidade .linha{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:15px;padding:4px 0}
+  .cidade .linha .bar{grid-column:1/-1;margin:0 0 4px}
+  .sgtag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-left:4px}
+  .sug{list-style:none;margin:6px 0 0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .sug li a{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+  .sug li:last-child a{border-bottom:0}
+  .sug .k{font-size:12px;color:var(--ink-3)}
+  .rep{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fff}
+  .rep>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;gap:12px;align-items:center}
+  .rep>summary::-webkit-details-marker{display:none}
+  .rep .cnt{flex:none;width:52px;height:52px;border-radius:12px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;font-weight:800;font-size:20px;line-height:1}
+  .rep .cnt small{display:block;font-size:10px;font-weight:600}
+  .rep[open]>summary{border-bottom:1px solid var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .chips button{font:inherit;font-size:13px;padding:5px 10px;border-radius:99px;border:1px solid #cbd5e1;background:#fff;color:var(--ink-2);cursor:pointer}
+  .chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .quem{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:15px;margin:6px 0}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--ink-2);margin-left:6px;vertical-align:2px}
+  .perfil{display:flex;gap:16px;align-items:center;margin-top:24px}
+  .perfil h1{margin:0 0 4px}
+  .big{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .n{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .stat .l{font-size:14px;color:var(--ink-2)}
+  .stat a{font-size:13px}
+  .bar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  details.grupo{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fff}
+  details.grupo>summary{list-style:none;cursor:pointer;padding:14px;display:flex;gap:12px;align-items:center}
+  details.grupo>summary::-webkit-details-marker{display:none}
+  details.grupo>summary .q{margin-left:auto;font-weight:800;font-size:20px}
+  details.grupo>summary .x{font-size:14px;color:var(--ink-3);display:block;font-weight:400}
+  details.grupo[open]>summary{border-bottom:1px solid var(--line)}
+  .lista{list-style:none;margin:0;padding:0}
+  .lista li{padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px}
+  .lista li:last-child{border-bottom:0}
+  .lista .meta{font-size:13px;color:var(--ink-3);margin-bottom:2px}
+  .mais{display:block;width:100%;padding:12px;border:0;border-top:1px solid var(--line);background:var(--soft);font:inherit;font-size:15px;color:var(--link);cursor:pointer;border-radius:0 0 12px 12px}
+  .anos{display:flex;gap:8px;margin:8px 0 4px}
+  .anos button{font:inherit;font-size:14px;padding:6px 12px;border-radius:99px;border:1px solid #cbd5e1;background:#fff;color:var(--ink-2);cursor:pointer}
+  .anos button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .sess{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+  .sess .r{font-size:14px;color:var(--ink-2)}
+  .pill{font-size:12px;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .pill.ok{background:var(--accent-soft);color:var(--accent)}
+  .pill.no{background:var(--warn-soft);color:var(--warn)}
+  footer{border-top:1px solid var(--line);margin-top:48px;padding:24px 0 40px;font-size:14px;color:var(--ink-3)}
+  .voltar{display:inline-block;margin-top:18px;font-size:15px;text-decoration:none}
+  .carregando{color:var(--ink-3);padding:30px 0}
+  .card>div:nth-child(2){min-width:0;flex:1}
+  .perfil>div{min-width:0}
+  .perfil h1,.perfil .nota{overflow-wrap:anywhere}
+  .logo{white-space:nowrap}
+  @media (max-width:520px){
+    header.top .wrap{gap:8px}
+    .logo{font-size:18px}
+    nav.menu{gap:10px;font-size:13px}
+    .card{flex-wrap:wrap}
+    .card .nums{margin-left:70px;text-align:left;white-space:normal;flex-basis:100%}
+    .perfil{flex-direction:column;align-items:flex-start;gap:10px}
+    .big{grid-template-columns:1fr}
+    h1{font-size:24px}
+    .card .nums{font-size:13px}
+    .stat .n{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#inicio"><span class="dot"></span>Radar PG</a>
+  <nav class="menu">
+    <a href="#inicio" data-r="">Vereadores</a>
+    <a href="#bairros" data-r="bairros">Bairros</a>
+    <a href="#sessoes" data-r="sessoes">Sessões</a>
+    <a href="#como" data-r="como">Sobre</a>
+  </nav>
+</div></header>
+
+<main class="wrap" id="app"><p class="carregando">Carregando dados oficiais…</p></main>
+
+<footer><div class="wrap">
+  Radar Praia Grande — projeto independente, sem ligação com a Câmara, a Prefeitura ou partidos.
+  Todos os números vêm do <a href="https://www.praiagrande.sp.leg.br/dispositivo/ideCustom/camarapg_publico/materias_leg/pesquisa.php" target="_blank" rel="noopener">sistema oficial da Câmara Municipal</a>.
+  <span id="coleta"></span>
+  <br>Viu um erro? <a href="https://github.com/victorsfila/radar-praia-grande/issues/new" target="_blank" rel="noopener">Avise aqui</a> ou <a href="#como">saiba como funciona</a>.
+</div></footer>
+
+<script>
+const PUB = "https://www.praiagrande.sp.leg.br/dispositivo/ideCustom/camarapg_publico";
+const app = document.getElementById("app");
+let R = null, SESS = null; const CACHE = {};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dataBR = iso => iso ? iso.split("-").reverse().join("/") : "";
+const num = n => (n ?? 0).toLocaleString("pt-BR");
+const iniciais = n => { const w = n.split(" ").filter(x => /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(x)); return (w[0][0] + (w.length > 1 ? w[w.length-1][0] : "")); };
+const avatar = (v, g) => `<span class="foto${g ? " g" : ""}" style="display:grid;place-items:center;font-weight:700;color:var(--ink-2);position:relative">${esc(iniciais(v.nome))}<img src="${esc(v.foto)}" alt="${g ? "Foto oficial de " + esc(v.nome) : ""}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.remove()"></span>`;
+const link = (href, txt) => `<a href="${href}" target="_blank" rel="noopener">${txt}</a>`;
+const ORDEM_TIPOS = ["Indicações","Requerimento","Projeto de Lei","Projeto de Lei Complementar","Proposta de Emenda à L.O.","Projeto de Decreto Legislativo","Moção","Projeto de Resolução","Emendas Impositivas","Emendas Orçamentárias"];
+const partido = (v, longo) => { const p = longo ? v.partido_nome : v.partido; return p && p.replace(/[()\s]/g, "") ? p : "Partido não informado pela Câmara"; };
+const G = () => R.meta.grupos_ordem;
+const gNome = g => R.meta.grupos[g][0], gDesc = g => R.meta.grupos[g][1];
+const CURTO = {melhoria:"pedidos", cobranca:"cobranças", homenagem:"homenagens", lei:"leis", outros:"outros"};
+const nomeTipo = t => (R.meta.tipos_explica[t] || [t])[0];
+const explTipo = t => (R.meta.tipos_explica[t] || [, ""])[1];
+
+async function getJSON(p){ const r = await fetch(p); if(!r.ok) throw new Error(p); return r.json(); }
+
+function presencaTxt(v){
+  if(!v.pres_de && v.pres) return `<div class="n">${v.pres}</div><div class="l">sessões com presença registrada. Exerceu o mandato só em parte do período, por isso não calculamos "de quantas".</div>`;
+  if(!v.pres_de) return `<div class="n">—</div><div class="l">Sem presença registrada nas listas publicadas</div>`;
+  const pct = Math.round(100*v.pres/v.pres_de);
+  return `<div class="n">${v.pres} <span style="font-size:16px;font-weight:600;color:var(--ink-2)">de ${v.pres_de}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="l">sessões em que a Câmara registrou a presença dele(a)</div>`;
+}
+
+function home(){
+  const m = R.meta;
+  app.innerHTML = `
+    <h1>O que cada vereador de Praia Grande faz</h1>
+    <p class="lead">Presença nas sessões e propostas apresentadas por cada um dos vereadores da legislatura 2025–2028. Só dados oficiais da Câmara, sem nota nem opinião. Toque num nome para ver tudo.</p>
+    <div class="aviso"><b>Atenção sobre presença:</b> a Câmara não publicou a lista de presença de ${m.sessoes_sem_reg.length} das ${m.n_sessoes} sessões do período (a última lista publicada é de ${dataBR(m.ultima_presenca_registrada)}). Nessas sessões o Radar não marca presença nem falta para ninguém.</div>
+    <div class="cidade"><b>O que a Câmara recebeu em 2025 e 2026</b>
+      <div class="nota" style="margin-bottom:6px">${num(m.total_props)} propostas, de todos os autores, separadas pela <a href="#como">mesma regra para todos</a>.</div>
+      ${G().map(g => { const n = m.grupos_cidade[g] || 0, pct = 100*n/m.total_props; return `<div class="linha"><span>${esc(gNome(g))}</span><b>${num(n)} <span class="nota">(${pct < 1 ? "<1" : Math.round(pct)}%)</span></b><div class="bar"><i style="width:${Math.max(pct,0.5)}%"></i></div></div>`; }).join("")}
+    </div>
+    <a class="card" href="#bairros" style="margin-bottom:8px;background:var(--accent-soft);border-color:#cfe6dc"><div><div class="nome">O que foi pedido para o seu bairro?</div><div class="sub" style="color:var(--ink-2)">Digite o bairro ou a rua e veja os pedidos, quem pediu e os problemas que voltam várias vezes.</div></div><div class="nums" style="font-size:22px">→</div></a>
+    <div class="ctrl">
+      <input class="busca" id="q" type="search" placeholder="Buscar vereador ou partido…" autocomplete="off">
+      <select id="ord" aria-label="Ordenar">
+        <option value="nome">A–Z</option>
+        <option value="props">Mais propostas</option>
+        <option value="pres">Presença</option>
+      </select>
+    </div>
+    <ul class="cards" id="lista"></ul>
+    <p class="nota" style="margin-top:14px">Cada pedido de rua, cobrança ou homenagem conta como uma proposta, porque é assim que a Câmara registra. Um número maior não quer dizer trabalho melhor ou pior. "Propostas" conta só as que o vereador assinou como primeiro autor em 2025 e 2026. Quem aparece como "já exerceu mandato" assumiu como suplente ou deixou o cargo, e por isso tem menos sessões no período.</p>`;
+  const q = document.getElementById("q"), ord = document.getElementById("ord");
+  const draw = () => {
+    const t = q.value.trim().toLowerCase();
+    let vs = R.vereadores.filter(v => !t || (v.nome + " " + v.partido).toLowerCase().includes(t));
+    vs.sort((a,b) => ord.value==="props" ? b.total-a.total : ord.value==="pres" ? (b.pres_de? b.pres/b.pres_de:-1)-(a.pres_de? a.pres/a.pres_de:-1) : a.nome.localeCompare(b.nome,"pt-BR"));
+    document.getElementById("lista").innerHTML = vs.map(v => `
+      <li><a class="card" href="#v-${v.id}">
+        ${avatar(v)}
+        <div><div class="nome">${esc(v.nome)}</div>
+          <div class="sub">${esc(partido(v))}${v.cargo ? `<span class="tag">${esc(v.cargo)} da Câmara</span>` : ""}${v.ativo ? "" : '<span class="tag">já exerceu mandato</span>'}</div>
+          <div class="mini">${G().filter(g => v.grupos[g]).map(g => `${num(v.grupos[g])} ${CURTO[g]}`).join(" · ")}</div></div>
+        <div class="nums"><b>${num(v.total)}</b> propostas<br>${v.pres_de ? `presente em ${v.pres} de ${v.pres_de}` : v.pres ? `${v.pres} presenças (parte do período)` : "presença: sem registro"}</div>
+      </a></li>`).join("") || `<li class="nota">Nenhum vereador encontrado.</li>`;
+  };
+  q.oninput = draw; ord.onchange = draw; draw();
+}
+
+async function vereador(id){
+  const v = R.vereadores.find(x => x.id === id);
+  if(!v){ app.innerHTML = `<p>Vereador não encontrado.</p><a class="voltar" href="#inicio">← Voltar</a>`; return; }
+  const tipos = ORDEM_TIPOS.filter(t => v.props[t]).concat(Object.keys(v.props).filter(t => !ORDEM_TIPOS.includes(t)));
+  app.innerHTML = `
+    <a class="voltar" href="#inicio">← Todos os vereadores</a>
+    <div class="perfil">
+      ${avatar(v, true)}
+      <div><h1>${esc(v.nome)}</h1>
+        <div class="sub">${esc(partido(v, true))}${v.cargo ? `<span class="tag">${esc(v.cargo)} da Câmara</span>` : ""}${v.ativo ? "" : '<span class="tag">já exerceu mandato</span>'}</div>
+        <div class="nota">${v.email ? `E-mail do gabinete: <a href="mailto:${esc(v.email)}">${esc(v.email)}</a> · ` : ""}${v.fora_lista ? "Não aparece na lista oficial de vereadores da Câmara" : link(`${PUB}/parlamentares/detalhes_parlamentar.php?codigo=${v.id}`, "Ficha oficial na Câmara")}</div>
+      </div>
+    </div>
+    <div class="big">
+      <div class="stat">${presencaTxt(v)}
+        ${v.pres ? `<div class="nota">${v.pres_de ? "De" : "Presenças registradas de"} ${dataBR(v.pres_ini)} a ${dataBR(v.pres_fim)}${v.pres_just ? ` · ${v.pres_just} ausência(s) justificada(s)` : ""}. <a href="#sessoes-${v.id}">Ver sessão por sessão</a></div>` : ""}
+      </div>
+      <div class="stat"><div class="n">${num(v.total)}</div><div class="l">propostas como primeiro autor (2025–2026)</div>
+        <div class="nota">${v.fora_lista ? link(`${PUB}/materias_leg/pesquisa.php`, "Pesquisar pelo nome na Câmara") : link(`${PUB}/parlamentares/materias.php?codigo=${v.id}`, "Conferir na Câmara")}${Object.values(v.coautor).reduce((a,b)=>a+b,0) ? ` · e assinou outras ${num(Object.values(v.coautor).reduce((a,b)=>a+b,0))} junto com colegas` : ""}</div>
+      </div>
+    </div>
+    ${(v.votos.S + v.votos.N + v.votos.A + v.votos.X) ? `<h2>Como votou</h2>
+    <p class="nota">Votações nominais que a Câmara publicou em 2025 e 2026. "Não votou" pode ser ausência no momento da votação ou o presidente da sessão, que pela regra só vota em caso de empate.</p>
+    ${v.cargo === "Presidente" ? `<div class="aviso"><b>${esc(v.nome)} é o presidente da Câmara.</b> Quem preside a sessão, em regra, só vota em caso de empate. Por isso aparece "não votou" na maior parte das votações, e isso não é falta.</div>` : ""}
+    <div class="big" style="grid-template-columns:repeat(4,1fr);gap:6px">${["S","N","A","X"].map(k => `<div class="stat" style="padding:10px"><div class="n" style="font-size:22px">${num(v.votos[k])}</div><div class="l">${VNOME[k]}</div></div>`).join("")}</div>
+    <details class="grupo" id="vdet"><summary><div><h3>Ver voto por voto</h3><span class="x">Cada votação com o tema, o resultado e o voto dele(a).</span></div><span class="q">${num(v.votos.S + v.votos.N + v.votos.A + v.votos.X)}</span></summary>
+      <div class="chips" style="padding:0 14px" id="vf"><button class="on" data-k="">Todas</button>${["S","N","A","X"].filter(k => v.votos[k]).map(k => `<button data-k="${k}">${VNOME[k]} (${num(v.votos[k])})</button>`).join("")}</div>
+      <div id="vlst"></div></details>` : ""}
+    <h2>O que propôs</h2>
+    <p class="nota">As propostas estão separadas em grupos pela <a href="#como">mesma regra para todos os vereadores</a>. Toque num grupo para ler uma por uma. Cada proposta tem link para o documento oficial.</p>
+    <div class="anos" id="anos"><button data-a="" class="on">2025 e 2026</button><button data-a="2026">2026</button><button data-a="2025">2025</button></div>
+    <div id="grupos">${G().map(g => `
+      <details class="grupo" data-g="${g}">
+        <summary><div><h3>${esc(gNome(g))}</h3><span class="x">${esc(gDesc(g))}</span></div><span class="q" data-q="${g}">${num(v.grupos[g] || 0)}</span></summary>
+        <ul class="lista"></ul>
+      </details>`).join("")}</div>`;
+  let ano = "";
+  const contar = g => ano ? (v.grupos_ano[`${ano}|${g}`] || 0) : (v.grupos[g] || 0);
+  document.querySelectorAll("#anos button").forEach(b => b.onclick = () => {
+    ano = b.dataset.a; document.querySelectorAll("#anos button").forEach(x => x.classList.toggle("on", x===b));
+    document.querySelectorAll("[data-q]").forEach(el => el.textContent = num(contar(el.dataset.q)));
+    document.querySelectorAll("details.grupo[open]").forEach(d => preencher(d));
+  });
+  const carregar = async () => CACHE[id] || (CACHE[id] = await getJSON(`dados/v${id}.json`));
+  async function preencher(d, limite = 30){
+    const ul = d.querySelector(".lista"); ul.innerHTML = `<li class="nota">Carregando…</li>`;
+    const ps = (await carregar()).filter(p => p.pa && p.g === d.dataset.g && (!ano || p.a === ano));
+    ul.innerHTML = ps.slice(0, limite).map(p => `
+      <li><div class="meta">${esc(p.tp)} nº ${esc(p.n)}/${esc(p.a)} · ${dataBR(p.d)}${p.sg ? `<span class="sgtag">${esc(p.sg)}</span>` : ""}</div>
+      ${esc(p.e) || "<i>Sem ementa publicada</i>"}
+      <div>${link(`${PUB}/materias_leg/detalhes_materia.php?codigo=${p.c}`, "Ver na Câmara")}</div></li>`).join("") || `<li class="nota">Nenhuma proposta neste grupo${ano ? " em " + ano : ""}.</li>`;
+    const old = d.querySelector(".mais"); if(old) old.remove();
+    if(ps.length > limite){ const b = document.createElement("button"); b.className = "mais"; b.textContent = `Mostrar mais (${num(ps.length - limite)} restantes)`; b.onclick = () => preencher(d, limite + 100); d.appendChild(b); }
+  }
+  document.querySelectorAll("details.grupo[data-g]").forEach(d => d.addEventListener("toggle", () => { if(d.open) preencher(d); }));
+  const vdet = document.getElementById("vdet");
+  if(vdet){
+    let filtro = "";
+    const vdraw = async () => {
+      const el = document.getElementById("vlst"); el.innerHTML = `<p class="nota" style="padding:0 14px">Carregando…</p>`;
+      const xs = (await getVotos()).filter(x => x.x[v.id] && (!filtro || x.x[v.id] === filtro)).map(x => [x]);
+      const li = ([x]) => { const c = placar(x.x); return `<li><div class="meta">${dataBR(x.d)} · ${esc(x.st)}</div><b>Votou: ${VNOME[x.x[v.id]]}</b> · ${esc(x.m)}<br>${esc(x.e)}${x.e.length >= 240 ? "…" : ""}<div class="nota">Resultado: ${esc(x.r)} · placar: ${c.S} sim, ${c.N} não${c.A ? `, ${c.A} abstenção` : ""}${c.X ? `, ${c.X} não votaram` : ""}</div><div>${link(`${PUB}/sessao/result_votacao.php?codigo=${x.v}`, "Ver votação na Câmara")}</div></li>`; };
+      let lim = 30; const d = () => { el.innerHTML = `<ul class="lista">${xs.slice(0, lim).map(li).join("") || `<li class="nota">Nenhuma.</li>`}</ul>` + (xs.length > lim ? `<button class="mais">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = el.querySelector(".mais"); if(b) b.onclick = () => { lim += 100; d(); }; }; d();
+    };
+    vdet.addEventListener("toggle", () => { if(vdet.open) vdraw(); });
+    document.querySelectorAll("#vf button").forEach(b => b.onclick = () => { filtro = b.dataset.k; document.querySelectorAll("#vf button").forEach(x => x.classList.toggle("on", x === b)); vdraw(); });
+  }
+}
+
+async function sessoes(vid){
+  SESS = SESS || await getJSON("dados/sessoes.json");
+  const VOT = await getVotos(); const porSessao = {}; VOT.forEach(x => (porSessao[x.s] = porSessao[x.s] || []).push(x));
+  const v = vid && R.vereadores.find(x => x.id === vid);
+  const nome = id => (R.vereadores.find(x => x.id === id) || {}).nome || id;
+  const lista = [...SESS].reverse();
+  app.innerHTML = `
+    ${v ? `<a class="voltar" href="#v-${v.id}">← ${esc(v.nome)}</a>` : ""}
+    <h1>${v ? `Presença de ${esc(v.nome)}` : "Sessões da Câmara"}</h1>
+    <p class="lead">${num(SESS.length)} sessões de 2025 e 2026. A Câmara publicou a lista de presença de ${num(R.meta.n_sessoes_reg)} delas.${v ? "" : " Toque numa sessão para ver quem estava e o que foi votado."}</p>
+    ${lista.map(s => {
+      let st;
+      if(!s.reg) st = `<span class="pill no">presença não publicada</span>`;
+      else if(v) st = s.p.includes(v.id) ? `<span class="pill ok">presente</span>` : (s.j.includes(v.id) ? `<span class="pill no">ausência justificada</span>` : v.pres_de ? `<span class="pill no">não consta na lista</span>` : `<span class="pill">não consta</span>`);
+      else st = `<span class="pill ok">${s.p.length} presentes</span>`;
+      return `<details class="sess"><summary style="cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:space-between"><span><b>${esc(s.t)}</b></span>${st}</summary>
+        <div class="r" style="margin-top:8px">${s.reg ? `<b>Presentes:</b> ${s.p.map(nome).map(esc).join(", ")}` : "A Câmara não publicou a lista de presença desta sessão."}
+        ${(porSessao[s.c] || []).length ? `<div style="margin-top:8px"><b>Votações:</b><ul style="margin:4px 0 0;padding-left:18px">${porSessao[s.c].slice().reverse().map(x => { const c = placar(x.x); const quem = k => Object.entries(x.x).filter(([, val]) => val === k).map(([id]) => nome(id)); return `<li style="margin-bottom:6px">${esc(x.m)} — <b>${esc(x.r)}</b><br><span class="nota">${esc(x.e.slice(0,180))}${x.e.length>180?"…":""}</span><br>${v ? `<b>${esc(v.nome)}: ${x.x[v.id] ? VNOME[x.x[v.id]] : "não consta"}</b> · ` : ""}<span class="nota">${c.S} sim · ${c.N} não${c.A ? ` · ${c.A} abstenção` : ""}${c.X ? ` · ${c.X} não votaram` : ""}</span>${["N","A","X"].filter(k => c[k]).map(k => `<div class="nota">${VNOME[k]}: ${quem(k).map(esc).join(", ")}</div>`).join("")}</li>`; }).join("")}</ul></div>` : (s.o.length ? `<div style="margin-top:8px"><b>Ordem do Dia:</b><ul style="margin:4px 0 0;padding-left:18px">${s.o.map(o => `<li>${esc(o.m)} — ${esc(o.r)}</li>`).join("")}</ul><div class="nota">A Câmara não publicou a votação nominal desta sessão.</div></div>` : "")}
+        <div style="margin-top:6px">${link(`${PUB}/sessao/dados_basicos.php?codigo=${s.c}`, "Ver sessão na Câmara")}</div></div></details>`;
+    }).join("")}`;
+}
+
+
+let B = null, VT = null;
+const VNOME = {S:"Sim", N:"Não", A:"Abstenção", X:"Não votou"};
+const getVotos = async () => VT || (VT = await getJSON("dados/votos.json"));
+const placar = x => { const c = {S:0,N:0,A:0,X:0}; Object.values(x).forEach(k => c[k]++); return c; };
+const AVISO_REP = `<div class="aviso"><b>Pedido repetido não prova que a Prefeitura ignorou.</b> Pode ser outro trecho da mesma rua, um problema que voltou depois de consertado ou vereadores diferentes pedindo a mesma coisa. Para saber se o pedido foi atendido, é preciso perguntar à Prefeitura.</div>`;
+const pedidoLi = p => {
+  const [c, a, d, tp, ts, rs, b, n, e] = p;
+  return `<li><div class="meta">${tp ? "Requerimento" : "Indicação"} nº ${esc(n)} · ${dataBR(d)} · <b>${esc(B.autores[a])}</b>${ts.map(t => `<span class="sgtag">${esc(B.temas[t])}</span>`).join("")}</div>${esc(e)}<div>${link(`${PUB}/materias_leg/detalhes_materia.php?codigo=${c}`, "Ver na Câmara")}</div></li>`;
+};
+function listaPaginada(el, ps, passo = 30){
+  let lim = passo;
+  const draw = () => {
+    el.innerHTML = `<ul class="lista">${ps.slice(0, lim).map(i => pedidoLi(B.pedidos[i])).join("") || `<li class="nota">Nenhum pedido.</li>`}</ul>` +
+      (ps.length > lim ? `<button class="mais">Mostrar mais (${num(ps.length - lim)} restantes)</button>` : "");
+    const b = el.querySelector(".mais"); if(b) b.onclick = () => { lim += 100; draw(); };
+  };
+  draw();
+}
+const repCard = x => {
+  const ps = x.p.map(i => B.pedidos[i]);
+  return `<details class="rep"><summary><div class="cnt">${x.n}<small>pedidos</small></div><div><b>${esc(B.ruas[x.r])}</b>${x.b >= 0 ? ` · ${esc(B.bairros[x.b])}` : ""}<div class="sub">${esc(B.temas[x.t])} · de ${dataBR(x.ini)} a ${dataBR(x.fim)} · ${x.na} ${x.na > 1 ? "autores" : "autor"}</div></div></summary>
+    <div style="padding:10px 14px" class="nota">Datas: ${ps.map(p => dataBR(p[2])).join(", ")}</div>
+    <ul class="lista">${ps.map(pedidoLi).join("")}</ul></details>`;
+};
+function resumoQuem(ps){
+  const c = {}; ps.forEach(i => { const a = B.pedidos[i][1]; c[a] = (c[a] || 0) + 1; });
+  return `<div class="quem">${Object.entries(c).sort((a,b) => b[1]-a[1]).map(([a, n]) => `<span>${esc(B.autores[a])}</span><b>${num(n)}</b>`).join("")}</div>`;
+}
+function resumoTemas(ps, alvo){
+  const c = {}; ps.forEach(i => B.pedidos[i][4].forEach(t => c[t] = (c[t] || 0) + 1));
+  const ord = Object.entries(c).sort((a,b) => b[1]-a[1]);
+  return `<div class="chips" id="${alvo}"><button class="on" data-t="">Todos (${num(ps.length)})</button>${ord.map(([t, n]) => `<button data-t="${t}">${esc(B.temas[t])} (${num(n)})</button>`).join("")}</div>`;
+}
+async function bairros(kind, id){
+  if(!B){ app.innerHTML = `<p class="carregando">Carregando os pedidos de todos os bairros…</p>`; B = await getJSON("dados/busca.json"); }
+  const mb = R.meta.busca, pct = x => Math.round(100 * x / mb.n_pedidos);
+  if(kind === "bairro" || kind === "rua"){
+    id = +id;
+    const nome = kind === "bairro" ? B.bairros[id] : B.ruas[id];
+    const ps = B.pedidos.map((p, i) => i).filter(i => kind === "bairro" ? B.pedidos[i][6] === id : B.pedidos[i][5].includes(id)).sort((a, b) => (B.pedidos[b][2] || "").localeCompare(B.pedidos[a][2] || ""));
+    const reps = B.repetidos.filter(x => kind === "bairro" ? x.b === id : x.r === id);
+    let ruasDoBairro = "";
+    if(kind === "bairro"){
+      const c = {}; ps.forEach(i => B.pedidos[i][5].forEach(r => c[r] = (c[r] || 0) + 1));
+      ruasDoBairro = `<h2>Ruas com mais pedidos</h2><ul class="sug">${Object.entries(c).sort((a,b) => b[1]-a[1]).slice(0, 10).map(([r, n]) => `<li><a href="#rua-${r}"><span>${esc(B.ruas[r])}</span><b>${num(n)}</b></a></li>`).join("")}</ul>`;
+    }
+    app.innerHTML = `<a class="voltar" href="#bairros">← Buscar outro bairro ou rua</a>
+      <h1>${esc(nome)}</h1>
+      <p class="lead">${num(ps.length)} pedidos de vereadores${kind === "bairro" ? " para este bairro" : " citam esta rua"} em 2025 e 2026 (indicações e requerimentos).</p>
+      <h2>Quem pediu</h2>${resumoQuem(ps)}
+      ${reps.length ? `<h2>Pedidos que voltam</h2><p class="nota">Mesmo tipo de pedido, mesma rua, 3 vezes ou mais em datas diferentes.</p>${AVISO_REP}${reps.slice(0, 20).map(repCard).join("")}${reps.length > 20 ? `<p class="nota">E mais ${num(reps.length - 20)}. Veja por rua abaixo.</p>` : ""}` : ""}
+      ${ruasDoBairro}
+      <h2>Todos os pedidos</h2>${resumoTemas(ps, "fil")}<div id="lst"></div>`;
+    const lst = document.getElementById("lst"); listaPaginada(lst, ps);
+    document.querySelectorAll("#fil button").forEach(b => b.onclick = () => {
+      document.querySelectorAll("#fil button").forEach(x => x.classList.toggle("on", x === b));
+      listaPaginada(lst, b.dataset.t === "" ? ps : ps.filter(i => B.pedidos[i][4].includes(+b.dataset.t)));
+    });
+    return;
+  }
+  // página inicial da busca
+  const cb = {}; B.pedidos.forEach(p => { if(p[6] >= 0) cb[p[6]] = (cb[p[6]] || 0) + 1; });
+  const cr = {}; B.pedidos.forEach(p => p[5].forEach(r => cr[r] = (cr[r] || 0) + 1));
+  app.innerHTML = `<h1>O que foi pedido para o seu bairro</h1>
+    <p class="lead">Digite o nome do bairro ou da rua. Você vê tudo o que os vereadores pediram para lá, quem pediu e quando.</p>
+    <input class="busca" id="qb" type="search" placeholder="Ex.: Boqueirão ou Rua Mococa" autocomplete="off">
+    <ul class="sug" id="sug" style="display:none"></ul>
+    <div class="chips" style="margin-top:12px">${Object.entries(cb).sort((a,b) => b[1]-a[1]).map(([b, n]) => `<a class="tag" style="text-decoration:none;font-size:14px;margin:0" href="#bairro-${b}">${esc(B.bairros[b])}</a>`).join("")}</div>
+    <h2>Problemas que não somem</h2>
+    <p>Quando o mesmo tipo de pedido (por exemplo, buraco ou bueiro) volta <b>3 vezes ou mais</b> para a <b>mesma rua</b>, em datas com pelo menos 30 dias de distância. Os mais repetidos aparecem primeiro.</p>
+    ${AVISO_REP}
+    <div class="chips" id="ft"><button class="on" data-t="">Todos</button>${B.temas.map((t, i) => [t, i]).filter(([t]) => t !== "Outros pedidos").map(([t, i]) => `<button data-t="${i}">${esc(t)}</button>`).join("")}</div>
+    <div id="reps"></div>
+    <p class="nota" style="margin-top:18px">Como funciona: o Radar lê a ementa oficial de cada indicação e requerimento e procura nomes de rua (Rua, Avenida, Travessa…) e de bairro. Conseguimos identificar a rua em ${pct(mb.com_rua)}% dos pedidos e o bairro em ${pct(mb.com_bairro)}%. Pedidos sem endereço claro, como os que valem para a cidade toda, não aparecem na busca por rua. O tema (buraco, bueiro, poda…) vem de palavras da ementa, e um pedido pode ter mais de um tema.</p>`;
+  const reps = document.getElementById("reps");
+  const drawReps = t => { const xs = B.repetidos.filter(x => t === "" || x.t === +t); let lim = 25;
+    const d = () => { reps.innerHTML = xs.slice(0, lim).map(repCard).join("") + (xs.length > lim ? `<button class="mais" style="border-radius:12px;border:1px solid var(--line)">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = reps.querySelector(".mais"); if(b) b.onclick = () => { lim += 50; d(); }; }; d(); };
+  drawReps("");
+  document.querySelectorAll("#ft button").forEach(b => b.onclick = () => { document.querySelectorAll("#ft button").forEach(x => x.classList.toggle("on", x === b)); drawReps(b.dataset.t); });
+  const semAc = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const idxB = B.bairros.map((n, i) => ({k:"bairro", i, n, s: semAc(n), c: cb[i] || 0}));
+  const idxR = B.ruas.map((n, i) => ({k:"rua", i, n, s: semAc(n), c: cr[i] || 0}));
+  const qb = document.getElementById("qb"), sug = document.getElementById("sug");
+  qb.oninput = () => {
+    const q = semAc(qb.value.trim()); if(q.length < 2){ sug.style.display = "none"; return; }
+    const ws = q.split(/\s+/);
+    const hit = x => ws.every(w => x.s.includes(w));
+    const res = idxB.filter(hit).concat(idxR.filter(hit).sort((a, b) => b.c - a.c)).slice(0, 12);
+    sug.style.display = "block";
+    sug.innerHTML = res.map(x => `<li><a href="#${x.k}-${x.i}"><span>${esc(x.n)} <span class="k">${x.k === "bairro" ? "bairro" : ""}</span></span><span class="k">${num(x.c)} pedidos</span></a></li>`).join("") || `<li class="nota" style="padding:10px 14px">Nada encontrado. Tente só uma parte do nome.</li>`;
+  };
+}
+
+function como(){
+  const m = R.meta;
+  app.innerHTML = `
+    <h1>Como o Radar funciona</h1>
+    <p class="lead">O Radar copia os dados que a própria Câmara Municipal de Praia Grande publica no seu sistema oficial e organiza tudo por vereador. Nada aqui é opinião.</p>
+    <h2>De onde vêm os números</h2>
+    <ul>
+      <li><b>Vereadores:</b> lista oficial de parlamentares da 14ª legislatura (2025–2028).</li>
+      <li><b>Propostas:</b> todas as ${num(m.total_props)} matérias apresentadas em 2025 e 2026 no ${link(`${PUB}/materias_leg/pesquisa.php`, "sistema de consulta da Câmara")}. Contamos para cada vereador as que ele assinou como <b>primeiro autor</b>. As que ele assinou junto com colegas aparecem à parte.</li>
+      <li><b>Presença:</b> listas de presença de cada sessão, publicadas no ${link(`${PUB}/pesquisa_sessao.php`, "sistema de sessões")}.</li>
+    </ul>
+    <h2>Como as propostas são agrupadas</h2>
+    <p>A Câmara usa muitos tipos de documento. Para facilitar, o Radar junta tudo em cinco grupos, olhando só o <b>tipo oficial</b> do documento e <b>palavras da ementa oficial</b>. A regra é aplicada nesta ordem, igual para todos os vereadores:</p>
+    <ol>${R.meta.regra.map(r => `<li>${esc(r)}</li>`).join("")}</ol>
+    <p>Resultado em 2025 e 2026: ${G().map(g => `${esc(gNome(g))}: ${num(R.meta.grupos_cidade[g] || 0)}`).join(" · ")}.</p>
+    <p class="nota">A regra é automática e pode errar em casos raros, como uma ementa escrita de um jeito diferente. O tipo oficial de cada documento sempre aparece ao lado da proposta, e você pode conferir no link da Câmara.</p>
+    <h2>Regras de presença</h2>
+    <ul>
+      <li>Só contam as sessões em que a Câmara publicou a lista de presença. Hoje são ${num(m.n_sessoes_reg)} de ${num(m.n_sessoes)}.</li>
+      <li><b>Dado ausente não é falta.</b> Nas ${num(m.sessoes_sem_reg.length)} sessões sem lista, ninguém recebe presença nem falta.</li>
+      <li>Quem esteve no cargo o período todo é comparado com todas as sessões que têm lista publicada.</li>
+      <li>Quem assumiu como suplente, se licenciou ou saiu no meio do período aparece só com o <b>número de presenças</b>, sem o "de quantas". O sistema da Câmara não informa as datas exatas de posse, licença e saída, e uma conta com datas erradas acusaria faltas que não existiram.</li>
+      <li>"Não consta na lista" quer dizer que o nome não está na lista oficial daquela sessão. Pode ser falta, licença ou erro de registro.</li>
+    </ul>
+    <h2>Como cada vereador votou</h2>
+    <p>A Câmara publica, para cada votação nominal, o voto de cada vereador: Sim, Não, Abstenção ou Não votou. O Radar mostra esses votos sem interpretar. "Não votou" pode ser ausência no momento da votação ou o presidente da sessão, que pela regra só vota em caso de empate. Votações simbólicas, sem registro nominal, não aparecem.</p>
+    <p>Total de votações nominais coletadas: ${num(R.meta.n_votacoes || 0)}.</p>
+    <h2>Mesma régua para todos</h2>
+    <p>Todos os vereadores, de todos os partidos, aparecem com as mesmas regras. O Radar não dá nota, não faz ranking oficial e não recomenda voto.</p>
+    <h2>Como os números foram conferidos</h2>
+    <ul>
+      <li><b>Propostas:</b> o total coletado bate com o total que o sistema da Câmara mostra (6.172 em 2025 e 7.337 em 2026). As contagens de cada vereador por ano e por tipo foram comparadas com a ficha oficial de cada um, e as 250 contagens bateram.</li>
+      <li><b>Presença:</b> cada lista de presença foi baixada duas vezes e comparada com a segunda lista oficial da Câmara, a de "Presenças da Ordem do Dia". Elas são iguais em 94 das 95 sessões. A única diferença: Marcelino Santos Gomes aparece na lista da sessão de 06/01/2025, mas não na da Ordem do Dia.</li>
+      <li><b>Endereços e temas dos pedidos:</b> saem de uma leitura automática da ementa e são uma estimativa. O texto oficial de cada pedido está sempre ao lado, com link para a Câmara.</li>
+    </ul>
+    <p class="nota">Conferência feita em 18/11/2026, na primeira publicação.</p>
+    <h2>Encontrou um erro?</h2>
+    <p>Abra um aviso na <a href="https://github.com/victorsfila/radar-praia-grande/issues/new" target="_blank" rel="noopener">página de avisos do projeto</a> (precisa de uma conta gratuita no GitHub) com o link da página do Radar e o dado oficial correto. A gente confere e corrige rápido.</p>
+    <p class="nota">Dados coletados em ${esc(m.coletado_em ? new Date(m.coletado_em).toLocaleString("pt-BR") : "")}.</p>`;
+}
+
+function rota(){
+  const h = location.hash.replace(/^#/, "").split("-");
+  document.querySelectorAll("nav.menu a").forEach(a => a.classList.toggle("on", a.dataset.r === (h[0]==="v" || h[0]==="inicio" ? "" : (h[0]==="bairro" || h[0]==="rua") ? "bairros" : h[0])));
+  window.scrollTo(0,0);
+  if(h[0]==="v") return vereador(h[1]);
+  if(h[0]==="sessoes") return sessoes(h[1]);
+  if(h[0]==="bairros") return bairros();
+  if(h[0]==="bairro" || h[0]==="rua") return bairros(h[0], h[1]);
+  if(h[0]==="como") return como();
+  home();
+}
+
+getJSON("dados/resumo.json").then(d => {
+  R = d;
+  if(d.meta.coletado_em) document.getElementById("coleta").textContent = `Atualizado em ${new Date(d.meta.coletado_em).toLocaleDateString("pt-BR")}.`;
+  window.addEventListener("hashchange", rota); rota();
+}).catch(() => app.innerHTML = `<p>Não foi possível carregar os dados. Tente recarregar a página.</p>`);
+</script>
+</body>
+</html>

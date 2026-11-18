@@ -1,0 +1,58 @@
+# Robô do Radar: toda madrugada coleta de novo os dados da Câmara,
+# confere se a coleta está completa e, só se estiver, republica o site.
+name: Atualizar dados
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # 03:17 em Brasília (06:17 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: atualizar
+  cancel-in-progress: false
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    outputs:
+      mudou: ${{ steps.commit.outputs.mudou }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests==2.32.3 beautifulsoup4==4.12.3
+      - name: Coletar dados da Câmara (devagar, com pausa entre páginas)
+        run: python coletor/coleta.py /tmp/coleta.json
+      - name: Conferir se a coleta está completa
+        run: python coletor/conferir.py /tmp/coleta.json site/dados/resumo.json
+      - name: Montar o site
+        run: python coletor/build.py /tmp/coleta.json site
+      - id: commit
+        name: Salvar a nova versão
+        run: |
+          git config user.name "radar-robo"
+          git config user.email "radar-robo@users.noreply.github.com"
+          git add site/dados
+          if git diff --cached --quiet; then
+            echo "mudou=nao" >> "$GITHUB_OUTPUT"; echo "Nada mudou."
+          else
+            git commit -m "Atualiza dados da Câmara ($(date -u +%Y-%m-%d))"
+            git push
+            echo "mudou=sim" >> "$GITHUB_OUTPUT"
+          fi
+
+  publicar:
+    needs: coletar
+    if: needs.coletar.outputs.mudou == 'sim'
+    uses: ./.github/workflows/publicar.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
