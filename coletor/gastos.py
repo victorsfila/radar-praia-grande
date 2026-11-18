@@ -143,6 +143,18 @@ def build_gastos(raw_gastos, out):
                 cands.append((ini, i))
         if cands:
             e["ct"] = max(cands)[1]; ligados += 1
+        elif de:
+            # Nenhum contrato vigente: liga ao contrato mais recente do mesmo fornecedor, se o ano do
+            # processo de licitação bater com o ano do contrato (prorrogações por aditivo não aparecem na lista).
+            m = re.search(r"/(\d{4})$", e.get("p", ""))
+            ano_proc = int(m.group(1)) if m else None
+            velhos = []
+            for i in por_doc.get(e["doc"], []):
+                c = contratos[i]; ini = _d(c["ini"])
+                if ini and ini <= de and ano_proc and ano_proc <= int(c["a"]) <= ano_proc + 1:
+                    velhos.append((ini, i))
+            if velhos:
+                e["ct"] = max(velhos)[1]; e["ctv"] = 1; ligados += 1
     empenhos.sort(key=lambda e: (e["a"], e["dt"][6:] + e["dt"][3:5] + e["dt"][:2]), reverse=True)
     dados = {"ligados": ligados, "anos": anos, "contratos": contratos, "empenhos": empenhos, "diarias": diarias, "portal": PORTAL + "tdaportalclient.aspx?418"}
     with open(os.path.join(out, "dados", "gastos.json"), "w", encoding="utf-8") as f:
