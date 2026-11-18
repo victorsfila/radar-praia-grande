@@ -1,6 +1,6 @@
 # Radar Praia Grande
 
-O que cada vereador de Praia Grande-SP faz, só com dados oficiais da Câmara Municipal: presença nas sessões, propostas apresentadas, como votou e o que foi pedido para cada bairro.
+O que cada vereador de Praia Grande-SP faz e quanto a Câmara gasta, só com dados oficiais: presença nas sessões, propostas apresentadas, como votou, o que foi pedido para cada bairro, e contratos, licitações e despesas da Câmara.
 
 **Site:** https://victorsfila.github.io/radar-praia-grande/
 
@@ -15,6 +15,10 @@ https://www.praiagrande.sp.leg.br/dispositivo/ideCustom/camarapg_publico/
 - todas as propostas apresentadas em 2025 e 2026 (indicações, requerimentos, projetos, moções…);
 - listas de presença de cada sessão;
 - votações nominais (voto de cada vereador).
+
+Os gastos vêm da API de dados abertos do Portal da Transparência da Câmara
+(https://leideacesso.etransparencia.com.br/PraiaGrande.Camara.SP/tdaportalclient.aspx?418):
+contratos, cada empenho de despesa com seus pagamentos e modalidade de licitação, e diárias/adiantamentos.
 
 ## Regras
 
@@ -34,10 +38,11 @@ coletor/conferir.py  recusa a coleta se ela vier incompleta ou estranha
 coletor/build.py     transforma os dados nos arquivos do site (site/dados/)
 coletor/classificar.py  regra única que separa as propostas em grupos
 coletor/enderecos.py    lê rua, bairro e tema de cada pedido
+coletor/gastos.py       organiza contratos, despesas e diárias
 site/                o site (uma página só, sem servidor)
 ```
 
-O robô (`.github/workflows/atualizar.yml`) roda toda madrugada às 03:17 (horário de Brasília). Se a coleta vier incompleta, ele não publica, e o site fica com a última versão boa. Para rodar na hora: aba **Actions** → **Atualizar dados** → **Run workflow**.
+O robô (`.github/workflows/atualizar.yml`) roda todos os dias às 10h e às 22h (horário de Brasília). Se a coleta vier incompleta, ele não publica, e o site fica com a última versão boa. Para rodar na hora: aba **Actions** → **Atualizar dados** → **Run workflow**.
 
 ## Encontrou um erro?
 

@@ -35,6 +35,15 @@ if antigo.get("n_sessoes_reg") and com_pres < antigo["n_sessoes_reg"] - 2:
 n_vot = sum(len(s.get("votacoes", [])) for s in S)
 if antigo.get("n_votacoes") and n_vot < antigo["n_votacoes"] * 0.95:
     falha(f"votações caíram de {antigo['n_votacoes']} para {n_vot}")
+G = novo.get("gastos", {})
+for ano, mods in G.items():
+    if not mods.get("DSP"):
+        falha(f"despesas de {ano} vieram vazias")
+ant_g = antigo.get("gastos") or {}
+for ano, v in ant_g.items():
+    novos = len({d.get("Nro Empenho") for d in G.get(ano, {}).get("DSP", [])})
+    if novos < v.get("n_empenhos", 0) * 0.98:
+        falha(f"empenhos de {ano} caíram de {v['n_empenhos']} para {novos}")
 sem_texto = sum(1 for m in M if not m.get("ementa"))
 if sem_texto > len(M) * 0.05:
     falha(f"{sem_texto} propostas sem ementa: a página da Câmara pode ter mudado")

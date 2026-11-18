@@ -5,6 +5,7 @@ Uso: python3 build.py dados.json saida/
 import json, re, sys, os, unicodedata, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from classificar import classificar, GRUPOS, ORDEM, REGRA_TEXTO
+from gastos import build_gastos
 from collections import Counter, defaultdict
 from datetime import date
 
@@ -260,6 +261,7 @@ def main(src, out):
         "n_votacoes": len(votacoes),
     }
     meta["busca"] = build_busca(raw, out)
+    meta["gastos"] = build_gastos(raw.get("gastos"), out)
     with open(os.path.join(out, "dados", "resumo.json"), "w", encoding="utf-8") as f:
         json.dump({"meta": meta, "vereadores": resumo}, f, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(out, "dados", "votos.json"), "w", encoding="utf-8") as f:

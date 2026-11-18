@@ -60,6 +60,10 @@
   .chips button{font:inherit;font-size:13px;padding:5px 10px;border-radius:99px;border:1px solid #cbd5e1;background:#fff;color:var(--ink-2);cursor:pointer}
   .chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .quem{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:15px;margin:6px 0}
+  table.tb{width:100%;border-collapse:collapse;font-size:14px}
+  table.tb td,table.tb th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  table.tb th{font-size:12px;color:var(--ink-3);font-weight:600}
+  table.tb td.v{text-align:right;white-space:nowrap}
   .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--ink-2);margin-left:6px;vertical-align:2px}
   .perfil{display:flex;gap:16px;align-items:center;margin-top:24px}
   .perfil h1{margin:0 0 4px}
@@ -96,10 +100,17 @@
   .perfil>div{min-width:0}
   .perfil h1,.perfil .nota{overflow-wrap:anywhere}
   .logo{white-space:nowrap}
+  nav.menu{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  nav.menu::-webkit-scrollbar{display:none}
+  .ctrl select{min-width:0;width:100%}
   @media (max-width:520px){
     header.top .wrap{gap:8px}
-    .logo{font-size:18px}
-    nav.menu{gap:10px;font-size:13px}
+    .logo{font-size:16px}
+    .logo .dot{width:10px;height:10px}
+  }
+  @media (max-width:430px){
+    .logo-t{display:none}
+    nav.menu{gap:9px;font-size:12.5px}
     .card{flex-wrap:wrap}
     .card .nums{margin-left:70px;text-align:left;white-space:normal;flex-basis:100%}
     .perfil{flex-direction:column;align-items:flex-start;gap:10px}
@@ -112,11 +123,12 @@
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="logo" href="#inicio"><span class="dot"></span>Radar PG</a>
+  <a class="logo" href="#inicio" aria-label="Radar PG, início"><span class="dot"></span><span class="logo-t">Radar PG</span></a>
   <nav class="menu">
     <a href="#inicio" data-r="">Vereadores</a>
     <a href="#bairros" data-r="bairros">Bairros</a>
     <a href="#sessoes" data-r="sessoes">Sessões</a>
+    <a href="#gastos" data-r="gastos">Gastos</a>
     <a href="#como" data-r="como">Sobre</a>
   </nav>
 </div></header>
@@ -170,6 +182,7 @@ function home(){
       ${G().map(g => { const n = m.grupos_cidade[g] || 0, pct = 100*n/m.total_props; return `<div class="linha"><span>${esc(gNome(g))}</span><b>${num(n)} <span class="nota">(${pct < 1 ? "<1" : Math.round(pct)}%)</span></b><div class="bar"><i style="width:${Math.max(pct,0.5)}%"></i></div></div>`; }).join("")}
     </div>
     <a class="card" href="#bairros" style="margin-bottom:8px;background:var(--accent-soft);border-color:#cfe6dc"><div><div class="nome">O que foi pedido para o seu bairro?</div><div class="sub" style="color:var(--ink-2)">Digite o bairro ou a rua e veja os pedidos, quem pediu e os problemas que voltam várias vezes.</div></div><div class="nums" style="font-size:22px">→</div></a>
+    <a class="card" href="#gastos" style="margin-bottom:8px"><div><div class="nome">Quanto a Câmara gasta?</div><div class="sub" style="color:var(--ink-2)">Contratos, licitações, fornecedores e todas as despesas, com valores empenhados e pagos.</div></div><div class="nums" style="font-size:22px">→</div></a>
     <div class="ctrl">
       <input class="busca" id="q" type="search" placeholder="Buscar vereador ou partido…" autocomplete="off">
       <select id="ord" aria-label="Ordenar">
@@ -382,6 +395,71 @@ async function bairros(kind, id){
   };
 }
 
+
+let GA = null;
+const brl = v => (v || 0).toLocaleString("pt-BR", {style:"currency", currency:"BRL", maximumFractionDigits: v >= 100000 ? 0 : 2});
+const modNome = m => m.replace("Pregao", "Pregão").replace("Eletronico", "Eletrônico").replace("Licitacao", "Licitação").replace("Concorrencia", "Concorrência");
+const MODEXPL = {
+  "Pregao Eletronico": "Pregão eletrônico: disputa de preço pela internet, entre empresas que cumprem o edital.",
+  "Pregao Presencial": "Pregão presencial: disputa de preço com lances feitos presencialmente.",
+  "Concorrencia Presencial": "Concorrência: licitação usada para contratos maiores, como publicidade e obras.",
+  "Dispensa de Licitacao": "Dispensa de licitação: compra direta permitida por lei, em geral para valores baixos ou emergências.",
+  "Inexigibilidade": "Inexigibilidade: compra sem disputa porque só há um fornecedor possível (cursos, softwares exclusivos…).",
+  "Outros": "Outros: gastos que não passam por licitação, como contas de água e luz, tarifas bancárias, taxas e adiantamentos."
+};
+async function gastosPg(anoSel){
+  if(!GA){ app.innerHTML = `<p class="carregando">Carregando os gastos da Câmara…</p>`; GA = await getJSON("dados/gastos.json"); }
+  const anos = Object.keys(GA.anos).sort().reverse(); const ano = anos.includes(anoSel) ? anoSel : anos[0]; const A = GA.anos[ano];
+  const maxCat = Math.max(...Object.values(A.categorias));
+  const totNP = Object.values(A.modalidades).reduce((s, x) => s + x[1], 0);
+  app.innerHTML = `<h1>Quanto a Câmara gasta</h1>
+    <p class="lead">Contratos, compras, licitações e todas as despesas da Câmara Municipal, como publicados no <a href="${GA.portal}" target="_blank" rel="noopener">Portal da Transparência da Câmara</a>.</p>
+    <div class="anos">${anos.map(a => `<button class="${a === ano ? "on" : ""}" onclick="location.hash='gastos-${a}'">${a}</button>`).join("")}</div>
+    <div class="big">
+      <div class="stat"><div class="n">${brl(A.empenhado)}</div><div class="l">empenhado em ${ano}</div><div class="nota">Empenho é a reserva do dinheiro para um gasto já decidido.</div></div>
+      <div class="stat"><div class="n">${brl(A.pago)}</div><div class="l">pago em ${ano}</div><div class="nota">${num(A.n_empenhos)} empenhos · ${num(A.n_contratos)} contratos assinados</div></div>
+    </div>
+    <h2>Para onde vai o dinheiro</h2>
+    <div class="cidade">${Object.entries(A.categorias).map(([c, v]) => `<div class="linha"><span>${esc(c)}</span><b>${brl(v)} <span class="nota">(${Math.round(100 * v / A.empenhado)}%)</span></b><div class="bar"><i style="width:${Math.max(100 * v / maxCat, 0.5)}%"></i></div></div>`).join("")}
+      <p class="nota" style="margin:6px 0 0">Valores empenhados. A categoria vem da "natureza da despesa" oficial de cada gasto.</p></div>
+    <h2>Como a Câmara compra</h2>
+    <p class="nota">Sem contar salários e encargos de pessoal. Valores empenhados em ${ano}.</p>
+    <table class="tb"><tr><th>Modalidade</th><th>Gastos</th><th style="text-align:right">Valor</th></tr>
+    ${Object.entries(A.modalidades).map(([m, [n, v]]) => `<tr><td><b>${esc(modNome(m))}</b><br><span class="nota">${esc((MODEXPL[m] || "").split(": ").slice(1).join(": "))}</span></td><td>${num(n)}</td><td class="v">${brl(v)}<br><span class="nota">${Math.round(100 * v / totNP)}%</span></td></tr>`).join("")}</table>
+    <p class="nota">Tomada de preços: nenhum gasto. Essa modalidade foi extinta pela nova Lei de Licitações (14.133/2021). Concurso público: nenhum gasto com realização de concurso registrado em 2025 e 2026.</p>
+    <h2>Quem mais recebeu</h2>
+    <p class="nota">Empresas e pessoas que mais receberam empenhos em ${ano}, fora salários e encargos de pessoal. Toque num nome para ver cada gasto.</p>
+    <table class="tb"><tr><th>Fornecedor</th><th style="text-align:right">Empenhado</th><th style="text-align:right">Pago</th></tr>
+    ${A.fornecedores.slice(0, 15).map(([n, d, e, p]) => `<tr><td><a href="javascript:void 0" data-f="${esc(n)}">${esc(n)}</a><br><span class="nota">${esc(d)}</span></td><td class="v">${brl(e)}</td><td class="v">${brl(p)}</td></tr>`).join("")}</table>
+    <h2>Contratos assinados em ${ano}</h2>
+    <ul class="lista" style="border:1px solid var(--line);border-radius:12px">${GA.contratos.filter(c => c.a === ano).map(c => `<li><div class="meta">Contrato ${esc(c.n.replace(/^0+/, ""))}/${c.a} · ${esc(c.t)} · de ${esc(c.ini)} a ${esc(c.fim)}</div><b>${esc(c.f)}</b> <span class="nota">${esc(c.doc)}</span><div>Contratado: <b>${brl(c.vc)}</b> · empenhado ${brl(c.ve)} · pago ${brl(c.vp)}</div></li>`).join("") || `<li class="nota">Nenhum contrato publicado.</li>`}</ul>
+    <h2 id="desp">Todas as despesas de ${ano}</h2>
+    <input class="busca" id="qd" type="search" placeholder="Buscar fornecedor, CNPJ, processo ou descrição…" autocomplete="off">
+    <div class="ctrl" style="grid-template-columns:1fr 1fr"><select id="fc"><option value="">Todas as categorias</option>${Object.keys(A.categorias).map(c => `<option>${esc(c)}</option>`).join("")}</select>
+    <select id="fm"><option value="">Todas as modalidades</option>${Object.keys(A.modalidades).map(m => `<option value="${esc(m)}">${esc(modNome(m))}</option>`).join("")}</select></div>
+    <div id="tot" class="nota"></div><div id="ld"></div>
+    <h2>Diárias, viagens e adiantamentos</h2>
+    <p class="nota">Dinheiro adiantado a servidores e vereadores para viagens, cursos e pequenas despesas, com prestação de contas depois.</p>
+    <div id="dv"></div>
+    <p class="nota" style="margin-top:18px">Fonte: API de dados abertos do Portal da Transparência da Câmara (contratos, despesas e diárias). Os valores são os publicados pela Câmara. CPFs de pessoas físicas aparecem mascarados, como pede a LGPD. Os dados são atualizados junto com o resto do Radar.</p>`;
+  const semAc = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const E = GA.empenhos.filter(e => e.a === ano);
+  const ld = document.getElementById("ld"), qd = document.getElementById("qd"), fc = document.getElementById("fc"), fm = document.getElementById("fm");
+  const li = e => `<li><div class="meta">Empenho ${esc(e.n)} · ${esc(e.dt)} · processo ${esc(e.p || "—")} · <span class="sgtag">${esc(modNome(e.mod))}</span>${e.emp < 0 ? `<span class="sgtag" style="background:var(--warn-soft);color:var(--warn)">anulação ou ajuste</span>` : ""}</div><b>${esc(e.c)}</b> <span class="nota">${esc(e.doc)}</span><br>${esc(e.d)}<div class="nota">${esc(e.nat)}</div><div>Empenhado <b>${brl(e.emp)}</b> · pago ${brl(e.pago)}${e.pags.length > 1 ? ` em ${e.pags.length} pagamentos` : ""}</div></li>`;
+  const draw = () => {
+    const q = semAc(qd.value.trim()); const ws = q.split(/\s+/).filter(Boolean);
+    const xs = E.filter(e => (!fc.value || e.cat === fc.value) && (!fm.value || e.mod === fm.value) && ws.every(w => semAc(e.c + " " + e.doc + " " + e.d + " " + e.p + " " + e.nat).includes(w)));
+    document.getElementById("tot").textContent = `${num(xs.length)} gastos · ${brl(xs.reduce((s, e) => s + e.emp, 0))} empenhados · ${brl(xs.reduce((s, e) => s + e.pago, 0))} pagos`;
+    let lim = 30; const d = () => { ld.innerHTML = `<ul class="lista" style="border:1px solid var(--line);border-radius:12px">${xs.slice(0, lim).map(li).join("") || `<li class="nota">Nada encontrado.</li>`}</ul>` + (xs.length > lim ? `<button class="mais" style="border-radius:12px">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = ld.querySelector(".mais"); if(b) b.onclick = () => { lim += 100; d(); }; }; d();
+  };
+  qd.oninput = draw; fc.onchange = draw; fm.onchange = draw; draw();
+  document.querySelectorAll("[data-f]").forEach(a => a.onclick = () => { qd.value = a.dataset.f; fc.value = ""; fm.value = ""; draw(); document.getElementById("desp").scrollIntoView({behavior:"smooth"}); });
+  const D = GA.diarias.filter(x => x.a === ano).sort((a, b) => b.emp - a.emp);
+  const porB = {}; D.forEach(x => { porB[x.b] = porB[x.b] || [0, 0]; porB[x.b][0] += x.emp; porB[x.b][1]++; });
+  document.getElementById("dv").innerHTML = `<table class="tb"><tr><th>Responsável</th><th>Vezes</th><th style="text-align:right">Total</th></tr>${Object.entries(porB).sort((a, b) => b[1][0] - a[1][0]).slice(0, 20).map(([n, [v, k]]) => `<tr><td>${esc(n)}</td><td>${k}</td><td class="v">${brl(v)}</td></tr>`).join("")}</table>
+    <details class="grupo" style="margin-top:10px"><summary><div><h3>Ver cada adiantamento</h3></div><span class="q">${num(D.length)}</span></summary><ul class="lista">${D.map(x => `<li><div class="meta">Empenho ${esc(x.n)} · ${esc(x.dt)}</div><b>${esc(x.b)}</b> · ${esc(x.d)}<div>Empenhado ${brl(x.emp)} · pago ${brl(x.pago)}</div></li>`).join("")}</ul></details>`;
+}
+
 function como(){
   const m = R.meta;
   app.innerHTML = `
@@ -398,6 +476,8 @@ function como(){
     <ol>${R.meta.regra.map(r => `<li>${esc(r)}</li>`).join("")}</ol>
     <p>Resultado em 2025 e 2026: ${G().map(g => `${esc(gNome(g))}: ${num(R.meta.grupos_cidade[g] || 0)}`).join(" · ")}.</p>
     <p class="nota">A regra é automática e pode errar em casos raros, como uma ementa escrita de um jeito diferente. O tipo oficial de cada documento sempre aparece ao lado da proposta, e você pode conferir no link da Câmara.</p>
+    <h2>Gastos da Câmara</h2>
+    <p>Os gastos vêm da API de dados abertos do <a href="https://leideacesso.etransparencia.com.br/PraiaGrande.Camara.SP/tdaportalclient.aspx?418" target="_blank" rel="noopener">Portal da Transparência da Câmara</a>: contratos, cada empenho de despesa com seus pagamentos, e diárias e adiantamentos. As categorias ("Pessoal", "Publicidade"…) agrupam a natureza oficial de cada despesa. CPFs de pessoas físicas aparecem mascarados.</p>
     <h2>Regras de presença</h2>
     <ul>
       <li>Só contam as sessões em que a Câmara publicou a lista de presença. Hoje são ${num(m.n_sessoes_reg)} de ${num(m.n_sessoes)}.</li>
@@ -430,6 +510,7 @@ function rota(){
   if(h[0]==="v") return vereador(h[1]);
   if(h[0]==="sessoes") return sessoes(h[1]);
   if(h[0]==="bairros") return bairros();
+  if(h[0]==="gastos") return gastosPg(h[1]);
   if(h[0]==="bairro" || h[0]==="rua") return bairros(h[0], h[1]);
   if(h[0]==="como") return como();
   home();

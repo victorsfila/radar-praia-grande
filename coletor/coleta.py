@@ -152,6 +152,31 @@ def materias(anos):
     return out, totais
 
 
+PORTAL_API = ("https://leideacesso.etransparencia.com.br/praiagrande.camara.sp/aJSONVision.aspx?"
+              "Z1nEogHHgW1qrJcSMvnjDfibByI,2,132,1357,0,mun=Praia Grande - Câmara&mes=0&tip=JSON")
+
+
+def gastos(anos):
+    """Contratos (CTR), despesas/empenhos (DSP) e diárias/adiantamentos (VGM) pela API de dados abertos do Portal da Transparência."""
+    out = {}
+    for ano in anos:
+        out[str(ano)] = {}
+        for mod in ("CTR", "DSP", "VGM"):
+            for tentativa in range(4):
+                try:
+                    r = S.get(f"{PORTAL_API}&exe={ano}&mod={mod}", timeout=120)
+                    r.raise_for_status()
+                    out[str(ano)][mod] = r.json().get("Valores", []) if r.text.strip() else []
+                    break
+                except Exception as e:  # noqa
+                    print(f"  gastos {ano} {mod}: tentativa {tentativa + 1} falhou: {e}", file=sys.stderr)
+                    time.sleep(15 * (tentativa + 1))
+            else:
+                raise RuntimeError(f"falhou: gastos {ano} {mod}")
+            time.sleep(PAUSA)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("saida")
@@ -161,8 +186,9 @@ def main():
     print("vereadores…", file=sys.stderr); P = parlamentares()
     print("mesa diretora…", file=sys.stderr); MD = mesa()
     print("sessões…", file=sys.stderr); SS = sessoes(anos)
+    print("gastos (Portal da Transparência)…", file=sys.stderr); G = gastos(anos)
     print("propostas…", file=sys.stderr); M, T = materias(anos)
-    dados = {"coletado_em": datetime.now(timezone.utc).isoformat(), "fonte": BASE, "parlamentares": P, "mesa": MD, "sessoes": SS, "materias": M,
+    dados = {"coletado_em": datetime.now(timezone.utc).isoformat(), "fonte": BASE, "parlamentares": P, "mesa": MD, "sessoes": SS, "gastos": G, "materias": M,
              **{f"total{k}": v for k, v in T.items()}}
     json.dump(dados, open(a.saida, "w", encoding="utf-8"), ensure_ascii=False)
     print(f"ok: {len(P)} vereadores, {len(SS)} sessões, {len(M)} propostas", file=sys.stderr)
