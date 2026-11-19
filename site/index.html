@@ -129,6 +129,8 @@
     <a href="#bairros" data-r="bairros">Bairros</a>
     <a href="#sessoes" data-r="sessoes">Sessões</a>
     <a href="#gastos" data-r="gastos">Gastos</a>
+    <a href="#prefeito" data-r="prefeito">Prefeito</a>
+    <a href="#mesa" data-r="mesa">Mesa</a>
     <a href="#como" data-r="como">Sobre</a>
   </nav>
 </div></header>
@@ -410,6 +412,8 @@ const MODEXPL = {
 async function gastosPg(anoSel){
   if(!GA){ app.innerHTML = `<p class="carregando">Carregando os gastos da Câmara…</p>`; GA = await getJSON("dados/gastos.json"); }
   const anos = Object.keys(GA.anos).sort().reverse(); const ano = anos.includes(anoSel) ? anoSel : anos[0]; const A = GA.anos[ano];
+  const fmtv = v => v === null || v === undefined ? "—" : brl(+v);
+  const pcBox = c => `<div style="border:1px solid #cfe6dc;border-radius:10px;padding:10px;margin-top:8px;background:var(--accent-soft)"><b>Contrato nº ${esc(c.num)} · ${esc(c.k)} no PNCP</b> · ${esc(c.cat)}<br>${esc(c.f)} <span class="nota">${esc(c.doc)}</span><div>${esc(c.obj)}</div><div class="nota">Processo ${esc(c.proc || "—")} · assinado em ${esc(c.ass)} · vigência ${esc(c.ini)} a ${esc(c.fimx)}${c.fimx !== c.fim ? ` (prorrogado por termo aditivo; vigência original até ${esc(c.fim)})` : ""}</div><div class="nota">Valor inicial ${fmtv(c.vi)} · valor global ${fmtv(c.vg)} · acumulado com aditivos ${fmtv(c.va)}</div>${c.termos.length ? `<div style="margin-top:4px"><b>Termos aditivos:</b><ul style="margin:2px 0;padding-left:18px">${c.termos.map(t => `<li>${esc(t.tipo || "Termo")} nº ${esc(t.n)} · assinado ${esc(t.ass)} · vigência ${esc(t.ini)} a ${esc(t.fim)}${t.v ? " · " + fmtv(t.v) : ""}${t.obj ? `<br><span class="nota">${esc(t.obj.slice(0, 160))}</span>` : ""}</li>`).join("")}</ul></div>` : ""}${c.pdfs.length ? c.pdfs.map(p => `<div>${link(p[1], "📄 " + esc(p[0] || "Documento"))}</div>`).join("") : `<div class="nota">O PNCP não tem arquivo anexado a este contrato.</div>`}<div>${link(c.url, "Ver no Portal Nacional de Contratações Públicas")}</div></div>`;
   const ctBox = c => `<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;background:var(--soft)"><b>Contrato nº ${esc(c.n.replace(/^0+/, ""))}/${c.a}</b> · ${esc(c.t)}<br>${esc(c.f)} <span class="nota">${esc(c.doc)}</span><div class="nota">Vigência: ${esc(c.ini)} a ${esc(c.fim)} · contratado ${brl(c.vc)} · empenhado ${brl(c.ve)} · pago ${brl(c.vp)}</div>${(c.pdfs || []).length ? c.pdfs.map((p, i) => `<div>${link(p[1], "📄 " + (p[0] && p[0].length > 3 ? esc(p[0]) : (i ? "Documento " + (i + 1) + " (PDF)" : "Abrir o contrato (PDF)")))}</div>`).join("") : `<div class="nota">O portal não publicou o PDF deste contrato. <a href="${GA.portal}" target="_blank" rel="noopener">Procurar no Portal da Transparência</a>.</div>`}</div>`;
   const maxCat = Math.max(...Object.values(A.categorias));
   const totNP = Object.values(A.modalidades).reduce((s, x) => s + x[1], 0);
@@ -432,7 +436,11 @@ async function gastosPg(anoSel){
     <p class="nota">Empresas e pessoas que mais receberam empenhos em ${ano}, fora salários e encargos de pessoal. Toque num nome para ver cada gasto.</p>
     <table class="tb"><tr><th>Fornecedor</th><th style="text-align:right">Empenhado</th><th style="text-align:right">Pago</th></tr>
     ${A.fornecedores.slice(0, 15).map(([n, d, e, p]) => `<tr><td><a href="javascript:void 0" data-f="${esc(n)}">${esc(n)}</a><br><span class="nota">${esc(d)}</span></td><td class="v">${brl(e)}</td><td class="v">${brl(p)}</td></tr>`).join("")}</table>
-    <h2>Contratos com gastos em ${ano}</h2>
+    <h2 id="pncp">Todos os contratos (PNCP)</h2>
+    <p class="nota">Contratos que a Câmara publicou no <b>Portal Nacional de Contratações Públicas</b>, obrigatório pela Lei 14.133/2021, com o PDF assinado, os termos aditivos e os gastos ligados. A Câmara começou a publicar lá em 2024.</p>
+    <input class="busca" id="qp" type="search" placeholder="Buscar empresa, CNPJ, objeto ou processo…" autocomplete="off">
+    <div id="tp" class="nota" style="margin:6px 0"></div><div id="lp"></div>
+    <h2>Contratos com gastos em ${ano} (Portal da Transparência)</h2>
     <p class="nota">Contratos assinados em ${ano} e contratos de anos anteriores que ainda geraram gastos em ${ano}. Toque para abrir o PDF e ver os gastos ligados.</p>
     <ul class="lista" style="border:1px solid var(--line);border-radius:12px">${GA.contratos.map((c, i) => [c, i]).filter(([c, i]) => c.a === ano || GA.empenhos.some(e => e.a === ano && e.ct === i)).sort((x, y) => y[0].vc - x[0].vc).map(([c, i]) => { const es = GA.empenhos.filter(e => e.a === ano && e.ct === i); return `<li><details><summary style="cursor:pointer;list-style:none"><div class="meta">Contrato ${esc(c.n.replace(/^0+/, ""))}/${c.a} · ${esc(c.t)} · de ${esc(c.ini)} a ${esc(c.fim)}${(c.pdfs || []).length ? `<span class="sgtag">📄 PDF</span>` : ""}</div><b>${esc(c.f)}</b> <span class="nota">${esc(c.doc)}</span><div>Contratado: <b>${brl(c.vc)}</b> · ${es.length} gastos ligados em ${ano}: ${brl(es.reduce((s, e) => s + e.emp, 0))} empenhados <span style="color:var(--link);font-size:14px">· ver detalhes</span></div></summary>${ctBox(c)}${es.length ? `<div style="margin-top:6px;font-size:14px"><b>Gastos ligados em ${ano}:</b><ul style="margin:4px 0;padding-left:18px">${es.map(e => `<li>${esc(e.dt)} · empenho ${esc(e.n)} · ${brl(e.emp)} · ${esc(e.d.slice(0, 90))}</li>`).join("")}</ul></div>` : ""}</details></li>`; }).join("") || `<li class="nota">Nenhum contrato publicado.</li>`}</ul>
     <h2 id="desp">Todas as despesas de ${ano}</h2>
@@ -447,13 +455,14 @@ async function gastosPg(anoSel){
   const semAc = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const E = GA.empenhos.filter(e => e.a === ano);
   const ld = document.getElementById("ld"), qd = document.getElementById("qd"), fc = document.getElementById("fc"), fm = document.getElementById("fm");
-  const li = e => `<li><details><summary style="cursor:pointer;list-style:none"><div class="meta">Empenho ${esc(e.n)} · ${esc(e.dt)} · processo ${esc(e.p || "—")} · <span class="sgtag">${esc(modNome(e.mod))}</span>${e.emp < 0 ? `<span class="sgtag" style="background:var(--warn-soft);color:var(--warn)">anulação ou ajuste</span>` : ""}${e.ct !== undefined ? `<span class="sgtag">📄 contrato${e.ctv ? " (prorrogado?)" : ""}</span>` : ""}</div><b>${esc(e.c)}</b> <span class="nota">${esc(e.doc)}</span><br>${esc(e.d)}<div class="nota">${esc(e.nat)}</div><div>Empenhado <b>${brl(e.emp)}</b> · pago ${brl(e.pago)}${e.pags.length > 1 ? ` em ${e.pags.length} pagamentos` : ""} <span style="color:var(--link);font-size:14px">· ver detalhes</span></div></summary>
+  const li = e => `<li><details><summary style="cursor:pointer;list-style:none"><div class="meta">Empenho ${esc(e.n)} · ${esc(e.dt)} · processo ${esc(e.p || "—")} · <span class="sgtag">${esc(modNome(e.mod))}</span>${e.emp < 0 ? `<span class="sgtag" style="background:var(--warn-soft);color:var(--warn)">anulação ou ajuste</span>` : ""}${e.pc !== undefined ? `<span class="sgtag">📄 contrato</span>` : e.ct !== undefined ? `<span class="sgtag">📄 contrato${e.ctv ? " (prorrogado?)" : ""}</span>` : ""}</div><b>${esc(e.c)}</b> <span class="nota">${esc(e.doc)}</span><br>${esc(e.d)}<div class="nota">${esc(e.nat)}</div><div>Empenhado <b>${brl(e.emp)}</b> · pago ${brl(e.pago)}${e.pags.length > 1 ? ` em ${e.pags.length} pagamentos` : ""} <span style="color:var(--link);font-size:14px">· ver detalhes</span></div></summary>
     <div style="margin-top:8px;font-size:14px">
       <div><b>Processo:</b> ${esc(e.p || "não informado")} · <b>Modalidade:</b> ${esc(modNome(e.mod))}</div>
       <div><b>Categoria:</b> ${esc(e.cat)} · <b>Natureza oficial:</b> ${esc(e.nat)}</div>
       <div><b>Liquidado:</b> ${brl(e.liq)} <span class="nota">(serviço ou produto entregue e conferido)</span></div>
       ${e.pags.length ? `<div style="margin-top:6px"><b>Pagamentos:</b><ul style="margin:4px 0;padding-left:18px">${e.pags.map(p => `<li>${esc(p[0])}: ${brl(p[1])}</li>`).join("")}</ul></div>` : `<div class="nota">Nenhum pagamento registrado ainda.</div>`}
-      ${e.ct !== undefined ? (e.ctv ? `<div class="aviso" style="margin:8px 0 0">A vigência publicada deste contrato terminou em ${esc(GA.contratos[e.ct].fim)}, mas os pagamentos continuam com o mesmo fornecedor e o mesmo processo de licitação. Em geral, isso indica que o contrato foi prorrogado por termo aditivo, e o portal não mostra os aditivos nesta lista. Para confirmar, consulte o processo ${esc(e.p)} no Portal da Transparência.</div>` : "") + ctBox(GA.contratos[e.ct]) : `<div class="nota" style="margin-top:6px">Nenhum contrato publicado ligado a este gasto. Pode ser compra direta, conta (água, luz, telefone), folha de pagamento ou adiantamento.</div>`}
+      ${e.pc !== undefined ? pcBox(GA.pncp[e.pc]) : ""}
+      ${e.pc !== undefined ? "" : e.ct !== undefined ? (e.ctv ? `<div class="aviso" style="margin:8px 0 0">A vigência publicada deste contrato terminou em ${esc(GA.contratos[e.ct].fim)}, mas os pagamentos continuam com o mesmo fornecedor e o mesmo processo de licitação. Em geral, isso indica que o contrato foi prorrogado por termo aditivo, e o portal não mostra os aditivos nesta lista. Para confirmar, consulte o processo ${esc(e.p)} no Portal da Transparência.</div>` : "") + ctBox(GA.contratos[e.ct]) : `<div class="nota" style="margin-top:6px">Nenhum contrato publicado ligado a este gasto. Pode ser compra direta, conta (água, luz, telefone), folha de pagamento ou adiantamento.</div>`}
       <div style="margin-top:6px">${link(GA.portal, "Conferir no Portal da Transparência")}<span class="nota"> (aba Despesas, empenho ${esc(e.n)})</span></div>
     </div></details></li>`;
   const draw = () => {
@@ -463,12 +472,58 @@ async function gastosPg(anoSel){
     let lim = 30; const d = () => { ld.innerHTML = `<ul class="lista" style="border:1px solid var(--line);border-radius:12px">${xs.slice(0, lim).map(li).join("") || `<li class="nota">Nada encontrado.</li>`}</ul>` + (xs.length > lim ? `<button class="mais" style="border-radius:12px">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = ld.querySelector(".mais"); if(b) b.onclick = () => { lim += 100; d(); }; }; d();
   };
   qd.oninput = draw; fc.onchange = draw; fm.onchange = draw; draw();
+  const qp = document.getElementById("qp"), lp = document.getElementById("lp");
+  const drawP = () => {
+    const ws = semAc(qp.value.trim()).split(/\s+/).filter(Boolean);
+    const xs = GA.pncp.map((c, i) => [c, i]).filter(([c]) => ws.every(w => semAc(c.f + " " + c.doc + " " + c.obj + " " + c.proc + " " + c.num).includes(w)));
+    document.getElementById("tp").textContent = `${num(xs.length)} contratos · ${brl(xs.reduce((s, [c]) => s + (+c.vg || 0), 0))} em valor global`;
+    let lim = 20; const d = () => { lp.innerHTML = `<ul class="lista" style="border:1px solid var(--line);border-radius:12px">${xs.slice(0, lim).map(([c, i]) => { const es = GA.empenhos.filter(e => e.pc === i); return `<li><details><summary style="cursor:pointer;list-style:none"><div class="meta">Contrato ${esc(c.num)} · assinado ${esc(c.ass)} · ${esc(c.cat)}${c.pdfs.length ? `<span class="sgtag">📄 PDF</span>` : ""}${c.termos.length ? `<span class="sgtag">${c.termos.length} aditivo(s)</span>` : ""}</div><b>${esc(c.f)}</b><br>${esc(c.obj.slice(0, 140))}<div>Valor global <b>${fmtv(c.vg)}</b> · ${es.length} gastos ligados <span style="color:var(--link);font-size:14px">· ver detalhes</span></div></summary>${pcBox(c)}${es.length ? `<div style="margin-top:6px;font-size:14px"><b>Gastos ligados:</b> ${brl(es.reduce((s, e) => s + e.emp, 0))} empenhados, ${brl(es.reduce((s, e) => s + e.pago, 0))} pagos<ul style="margin:4px 0;padding-left:18px">${es.slice(0, 40).map(e => `<li>${esc(e.dt)} · empenho ${esc(e.n)} · ${brl(e.emp)} · ${esc(e.d.slice(0, 80))}</li>`).join("")}</ul></div>` : ""}</details></li>`; }).join("") || `<li class="nota">Nada encontrado.</li>`}</ul>` + (xs.length > lim ? `<button class="mais" style="border-radius:12px">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = lp.querySelector(".mais"); if(b) b.onclick = () => { lim += 50; d(); }; }; d();
+  };
+  qp.oninput = drawP; drawP();
   document.querySelectorAll("[data-f]").forEach(a => a.onclick = () => { qd.value = a.dataset.f; fc.value = ""; fm.value = ""; draw(); document.getElementById("desp").scrollIntoView({behavior:"smooth"}); });
   const D = GA.diarias.filter(x => x.a === ano).sort((a, b) => b.emp - a.emp);
   const porB = {}; D.forEach(x => { const p = porB[x.b] = porB[x.b] || {v:0, d:0, a:0}; p.v += x.emp; if(x.tp === "Diária de viagem") p.d++; else p.a++; });
   document.getElementById("dv").innerHTML = `<table class="tb"><tr><th>Responsável</th><th>Diárias de viagem</th><th>Adiantamentos</th><th style="text-align:right">Total</th></tr>${Object.entries(porB).sort((a, b) => b[1].v - a[1].v).slice(0, 20).map(([n, p]) => `<tr><td>${esc(n)}</td><td>${p.d}</td><td>${p.a}</td><td class="v">${brl(p.v)}</td></tr>`).join("")}</table>
     <p class="nota">Diária de viagem: dinheiro para viagem a serviço. Adiantamento: dinheiro adiantado a um servidor para pequenas compras do setor (material, serviços urgentes), com prestação de contas depois. A maior parte desta lista é de adiantamentos, não de viagens.</p>
     <details class="grupo" style="margin-top:10px"><summary><div><h3>Ver cada adiantamento</h3></div><span class="q">${num(D.length)}</span></summary><ul class="lista">${D.map(x => `<li><div class="meta">Empenho ${esc(x.n)} · ${esc(x.dt)} · <span class="sgtag">${esc(x.tp || "")}</span></div><b>${esc(x.b)}</b> · ${esc(x.d)}<div>Empenhado ${brl(x.emp)} · pago ${brl(x.pago)}</div></li>`).join("")}</ul></details>`;
+}
+
+
+let PO = null;
+const votoBloco = (vot) => !vot.length ? `<div class="nota">Ainda sem votação nominal registrada.</div>` : vot.map(x => { const c = placar(x.x); const quem = k => Object.entries(x.x).filter(([, v]) => v === k).map(([id]) => (R.vereadores.find(v => v.id === id) || {}).nome || id); return `<div style="margin-top:6px"><b>${esc(x.r)}</b> · ${dataBR(x.d)} · ${esc(x.st)}<br><span class="nota">${c.S} sim · ${c.N} não${c.A ? ` · ${c.A} abstenção` : ""}${c.X ? ` · ${c.X} não votaram` : ""}</span>${["S","N","A","X"].filter(k => c[k]).map(k => `<div class="nota"><b>${VNOME[k]}:</b> ${quem(k).map(esc).join(", ")}</div>`).join("")}<div>${link(`${PUB}/sessao/result_votacao.php?codigo=${x.v}`, "Ver votação na Câmara")}</div></div>`; }).join("");
+const projLista = (el, xs) => { let lim = 25; const d = () => { el.innerHTML = `<ul class="lista" style="border:1px solid var(--line);border-radius:12px">${xs.slice(0, lim).map(p => `<li><details><summary style="cursor:pointer;list-style:none"><div class="meta">${esc(p.tp)} nº ${esc(p.n)}/${esc(p.a)} · ${dataBR(p.d)}${p.vot.length ? `<span class="sgtag">${esc(p.vot[p.vot.length - 1].r)}</span>` : `<span class="sgtag" style="background:var(--soft);color:var(--ink-3)">sem votação nominal</span>`}</div>${esc(p.e)}<div style="color:var(--link);font-size:14px">ver votos</div></summary><div style="font-size:14px">${votoBloco(p.vot)}<div style="margin-top:6px">${link(`${PUB}/materias_leg/detalhes_materia.php?codigo=${p.c}`, "Ver o projeto na Câmara")}</div></div></details></li>`).join("") || `<li class="nota">Nada encontrado.</li>`}</ul>` + (xs.length > lim ? `<button class="mais" style="border-radius:12px">Mostrar mais (${num(xs.length - lim)} restantes)</button>` : ""); const b = el.querySelector(".mais"); if(b) b.onclick = () => { lim += 50; d(); }; }; d(); };
+async function prefeitoPg(){
+  if(!PO){ app.innerHTML = `<p class="carregando">Carregando…</p>`; PO = await getJSON("dados/poderes.json"); }
+  await getVotos();
+  const X = PO.executivo, vot = X.filter(p => p.vot.length);
+  const ap = vot.filter(p => /aprovad/i.test(p.vot[p.vot.length - 1].r)).length, rj = vot.filter(p => /rejeitad/i.test(p.vot[p.vot.length - 1].r)).length;
+  const tipos = [...new Set(X.map(p => p.tp))];
+  app.innerHTML = `<h1>Projetos do Prefeito</h1>
+    <p class="lead">Tudo o que o Executivo Municipal (Prefeitura) enviou à Câmara em 2025 e 2026: projetos de lei, leis complementares e vetos. Toque num projeto para ver como cada vereador votou.</p>
+    <div class="big"><div class="stat"><div class="n">${num(X.length)}</div><div class="l">projetos enviados</div></div><div class="stat"><div class="n">${num(ap)} <span style="font-size:16px;color:var(--ink-2)">aprovados</span></div><div class="l">${num(rj)} ${rj === 1 ? "rejeitado" : "rejeitados"} · ${num(X.length - vot.length)} ainda sem votação nominal</div></div></div>
+    <input class="busca" id="qx" type="search" placeholder="Buscar no texto do projeto…" autocomplete="off">
+    <div class="chips" id="fx"><button class="on" data-t="">Todos</button>${tipos.map(t => `<button data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+    <div id="lx"></div>
+    <p class="nota" style="margin-top:14px">Fonte: sistema de propostas da Câmara (autor "Executivo Municipal") e votações nominais publicadas. "Não votou" inclui o presidente da sessão, que em regra só vota em caso de empate. Nos vetos, o resultado ("aprovado" ou "rejeitado") é o que a Câmara registrou para a votação do veto.</p>`;
+  let tf = ""; const semAc = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const draw = () => { const ws = semAc(document.getElementById("qx").value).split(/\s+/).filter(Boolean); projLista(document.getElementById("lx"), X.filter(p => (!tf || p.tp === tf) && ws.every(w => semAc(p.e + " " + p.n).includes(w)))); };
+  document.getElementById("qx").oninput = draw;
+  document.querySelectorAll("#fx button").forEach(b => b.onclick = () => { tf = b.dataset.t; document.querySelectorAll("#fx button").forEach(x => x.classList.toggle("on", x === b)); draw(); });
+  draw();
+}
+async function mesaPg(){
+  if(!PO){ app.innerHTML = `<p class="carregando">Carregando…</p>`; PO = await getJSON("dados/poderes.json"); }
+  await getVotos();
+  app.innerHTML = `<h1>Mesa Diretora</h1>
+    <p class="lead">A Mesa Diretora comanda os trabalhos e a administração da Câmara: presidente, vice-presidentes e secretários. Aqui estão quem compõe a Mesa, os atos que ela publicou e os projetos de autoria dela.</p>
+    <h2>Quem compõe</h2>
+    <table class="tb">${PO.mesa.map(m => { const v = R.vereadores.find(x => x.nome.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === m.nome.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "")); return `<tr><td><b>${esc(m.cargo)}</b></td><td>${v ? `<a href="#v-${v.id}">${esc(v.nome)}</a> · ${esc(v.partido)}` : esc(m.nome)}</td></tr>`; }).join("")}</table>
+    <h2>Atos da Mesa</h2>
+    <p class="nota">Decisões administrativas da Mesa: orçamento da Câmara, regras internas, diárias, adiantamentos e contratações.</p>
+    <ul class="lista" style="border:1px solid var(--line);border-radius:12px">${PO.atos.map(a => `<li><div class="meta">${esc(a.t)} · ${esc(a.data)}</div>${esc(a.e)}<div>${a.pdf ? link("https://www.praiagrande.sp.leg.br" + a.pdf, "📄 Ler o ato (PDF)") + " · " : ""}${link(`${PUB}/normas/norma.php?l=${a.id}`, "Ver na Câmara")}</div></li>`).join("") || `<li class="nota">Nenhum ato publicado.</li>`}</ul>
+    <h2>Projetos de autoria da Mesa</h2>
+    <div id="lm"></div>`;
+  projLista(document.getElementById("lm"), PO.mesa_props);
 }
 
 function como(){
@@ -489,6 +544,8 @@ function como(){
     <p class="nota">A regra é automática e pode errar em casos raros, como uma ementa escrita de um jeito diferente. O tipo oficial de cada documento sempre aparece ao lado da proposta, e você pode conferir no link da Câmara.</p>
     <h2>Gastos da Câmara</h2>
     <p>Os gastos vêm da API de dados abertos do <a href="https://leideacesso.etransparencia.com.br/PraiaGrande.Camara.SP/tdaportalclient.aspx?418" target="_blank" rel="noopener">Portal da Transparência da Câmara</a>: contratos, cada empenho de despesa com seus pagamentos, e diárias e adiantamentos. As categorias ("Pessoal", "Publicidade"…) agrupam a natureza oficial de cada despesa. CPFs de pessoas físicas aparecem mascarados.</p>
+    <h2>Contratos, Prefeito e Mesa</h2>
+    <p>Os contratos com PDF e aditivos vêm do <a href="https://pncp.gov.br" target="_blank" rel="noopener">Portal Nacional de Contratações Públicas (PNCP)</a>, onde todo órgão público é obrigado a publicar suas contratações. Um gasto é ligado ao contrato do mesmo fornecedor (CNPJ) que estava em vigor na data do empenho, contando as prorrogações por aditivo. Os projetos do Prefeito e da Mesa são as propostas com esses autores no sistema da Câmara, e os Atos da Mesa vêm da seção de Normas.</p>
     <h2>Regras de presença</h2>
     <ul>
       <li>Só contam as sessões em que a Câmara publicou a lista de presença. Hoje são ${num(m.n_sessoes_reg)} de ${num(m.n_sessoes)}.</li>
@@ -522,6 +579,8 @@ function rota(){
   if(h[0]==="sessoes") return sessoes(h[1]);
   if(h[0]==="bairros") return bairros();
   if(h[0]==="gastos") return gastosPg(h[1]);
+  if(h[0]==="prefeito") return prefeitoPg();
+  if(h[0]==="mesa") return mesaPg();
   if(h[0]==="bairro" || h[0]==="rua") return bairros(h[0], h[1]);
   if(h[0]==="como") return como();
   home();

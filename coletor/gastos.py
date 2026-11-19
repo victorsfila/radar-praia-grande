@@ -65,6 +65,7 @@ def build_gastos(raw_gastos, out):
         return None
     raw_gastos = dict(raw_gastos)
     extra = raw_gastos.pop("contratos_extra", {}) or {}
+    pncp_raw = raw_gastos.pop("pncp", None) or {}
     docs = dict(raw_gastos.pop("docs", {}) or {})
     # PDFs já conhecidos de execuções anteriores continuam valendo (o robô não consegue abrir a aba de documentos)
     try:
@@ -134,6 +135,46 @@ def build_gastos(raw_gastos, out):
                           "pdfs": docs.get(f"{ano}-{nro}", [])})
     for a in anos:
         anos[a]["n_contratos"] = sum(1 for c in contratos if c["a"] == a)
+    # ---- Contratos publicados no PNCP (Portal Nacional de Contratações Públicas), com PDFs e termos aditivos ----
+    pncp = []
+    def fmt_doc(ni, tipo):
+        ni = re.sub(r"\D", "", ni or "")
+        if len(ni) == 14:
+            return f"{ni[:2]}.{ni[2:5]}.{ni[5:8]}/{ni[8:12]}-{ni[12:]}"
+        if len(ni) == 11:
+            return f"***.{ni[3:6]}.{ni[6:9]}-**"
+        return ni
+    def iso_br(d):
+        return f"{d[8:10]}/{d[5:7]}/{d[:4]}" if d and len(d) >= 10 else ""
+    vistos_p = set()
+    for c in pncp_raw.get("contratos", []):
+        k = f"{c['anoContrato']}/{c['sequencialContrato']}"
+        if k in vistos_p:
+            continue
+        vistos_p.add(k)
+        termos = pncp_raw.get("termos", {}).get(k, [])
+        fim = max([c.get("dataVigenciaFim") or ""] + [t.get("fim") or "" for t in termos])
+        pncp.append({"k": k, "num": c.get("numeroContratoEmpenho", ""), "proc": c.get("processo", ""), "tipo": (c.get("tipoContrato") or {}).get("nome", ""),
+                     "cat": (c.get("categoriaProcesso") or {}).get("nome", ""), "obj": (c.get("objetoContrato") or "").strip(),
+                     "f": (c.get("nomeRazaoSocialFornecedor") or "").strip(), "doc": fmt_doc(c.get("niFornecedor"), c.get("tipoPessoa")),
+                     "ass": iso_br(c.get("dataAssinatura")), "ini": iso_br(c.get("dataVigenciaInicio")), "fim": iso_br(c.get("dataVigenciaFim")), "fimx": iso_br(fim),
+                     "vi": c.get("valorInicial"), "vg": c.get("valorGlobal"), "va": c.get("valorAcumulado"),
+                     "pdfs": [[a.get("t") or a.get("tipo") or "Documento", a.get("url")] for a in pncp_raw.get("arq", {}).get(k, []) if a.get("url")],
+                     "termos": [{"n": t.get("n"), "tipo": t.get("tipo"), "obj": (t.get("obj") or "").strip(), "ass": iso_br(t.get("ass")), "ini": iso_br(t.get("ini")), "fim": iso_br(t.get("fim")), "v": t.get("v")} for t in termos],
+                     "url": "https://pncp.gov.br/app/contratos/03100645000194/" + k.replace("/", "/")})
+    pncp.sort(key=lambda c: (c["ass"][6:] + c["ass"][3:5] + c["ass"][:2]), reverse=True)
+    por_doc_p = defaultdict(list)
+    for i, c in enumerate(pncp):
+        por_doc_p[c["doc"]].append(i)
+    ligados_pncp = 0
+    for e in empenhos:
+        de = _d(e["dt"]); cands = []
+        for i in por_doc_p.get(e["doc"], []):
+            c = pncp[i]; ini, fim = _d(c["ini"]), _d(c["fimx"])
+            if de and ini and fim and ini <= de and (de - fim).days <= 60:
+                cands.append((ini, i))
+        if cands:
+            e["pc"] = max(cands)[1]; ligados_pncp += 1
     # liga cada gasto ao contrato do mesmo fornecedor (CNPJ) vigente na data do empenho
     por_doc = defaultdict(list)
     for i, c in enumerate(contratos):
@@ -162,7 +203,7 @@ def build_gastos(raw_gastos, out):
             if velhos:
                 e["ct"] = max(velhos)[1]; e["ctv"] = 1; ligados += 1
     empenhos.sort(key=lambda e: (e["a"], e["dt"][6:] + e["dt"][3:5] + e["dt"][:2]), reverse=True)
-    dados = {"ligados": ligados, "anos": anos, "contratos": contratos, "empenhos": empenhos, "diarias": diarias, "portal": PORTAL + "tdaportalclient.aspx?418"}
+    dados = {"ligados": ligados, "ligados_pncp": ligados_pncp, "pncp": pncp, "anos": anos, "contratos": contratos, "empenhos": empenhos, "diarias": diarias, "portal": PORTAL + "tdaportalclient.aspx?418"}
     with open(os.path.join(out, "dados", "gastos.json"), "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, separators=(",", ":"))
     return {a: {"empenhado": v["empenhado"], "n_empenhos": v["n_empenhos"], "n_contratos": v["n_contratos"]} for a, v in anos.items()}

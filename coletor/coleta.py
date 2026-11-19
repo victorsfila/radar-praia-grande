@@ -186,6 +186,67 @@ def gastos(anos):
     return out
 
 
+PNCP = "https://pncp.gov.br/api"
+CNPJ_CAMARA = "03100645000194"
+
+
+def pncp_get(url):
+    for tentativa in range(4):
+        try:
+            r = S.get(url, timeout=180)
+            if r.status_code == 204:
+                return None
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:  # noqa
+            print(f"  PNCP tentativa {tentativa + 1}: {e}", file=sys.stderr)
+            time.sleep(20 * (tentativa + 1))
+    raise RuntimeError("falhou: " + url)
+
+
+def pncp(anos):
+    """Contratos da Câmara no Portal Nacional de Contratações Públicas, com arquivos (PDF) e termos aditivos."""
+    contratos, arq, termos = [], {}, {}
+    hoje = datetime.now().strftime("%Y%m%d")
+    for ano in range(min(anos) - 2, max(anos) + 1):  # contratos de anos anteriores ainda podem estar em vigor
+        pag = 1
+        while True:
+            j = pncp_get(f"{PNCP}/consulta/v1/contratos?dataInicial={ano}0101&dataFinal={min(f'{ano}1231', hoje)}&cnpjOrgao={CNPJ_CAMARA}&pagina={pag}&tamanhoPagina=50")
+            if not j:
+                break
+            contratos += j.get("data", [])
+            if pag >= (j.get("totalPaginas") or 1):
+                break
+            pag += 1
+    for c in contratos:
+        k = f"{c['anoContrato']}/{c['sequencialContrato']}"
+        base = f"{PNCP}/pncp/v1/orgaos/{CNPJ_CAMARA}/contratos/{c['anoContrato']}/{c['sequencialContrato']}"
+        a = pncp_get(base + "/arquivos") or []
+        arq[k] = [{"t": x.get("titulo"), "tipo": x.get("tipoDocumentoNome"), "url": x.get("url") or x.get("uri")} for x in a]
+        t = pncp_get(base + "/termos") or []
+        termos[k] = [{"n": x.get("numeroTermoContrato"), "tipo": x.get("tipoTermoContratoNome"), "obj": x.get("objetoTermoContrato"),
+                      "ini": x.get("dataVigenciaInicio"), "fim": x.get("dataVigenciaFim"), "v": x.get("valorGlobal"), "ass": x.get("dataAssinatura")} for x in t]
+        time.sleep(PAUSA)
+    print(f"  PNCP: {len(contratos)} contratos", file=sys.stderr)
+    return {"contratos": contratos, "arq": arq, "termos": termos}
+
+
+def atos_mesa(anos):
+    """Atos da Mesa Diretora (seção Normas do sistema da Câmara), com o PDF de cada um."""
+    out = []
+    for ano in anos:
+        s = sopa(get(f"normas/listagem-li.php?gr%5BepcNormativa%5D=7&gr%5Bano%5D={ano}"))
+        for tr in s.find_all("tr"):
+            tds = tr.find_all("td"); a = tr.find("a", href=re.compile(r"norma\.php"))
+            if not a or len(tds) < 3:
+                continue
+            nid = re.search(r"l=(\d+)", a["href"]).group(1)
+            det = BeautifulSoup(get(f"normas/norma.php?l={nid}"), "html.parser")
+            pdf = next((x["href"] for x in det.find_all("a", href=True) if x["href"].lower().endswith(".pdf")), "")
+            out.append({"t": texto(a), "id": nid, "data": texto(tds[1]), "e": re.sub(r"\s*Ver detalhes\s*$", "", texto(tds[2])), "pdf": pdf})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("saida")
@@ -196,8 +257,14 @@ def main():
     print("mesa diretora…", file=sys.stderr); MD = mesa()
     print("sessões…", file=sys.stderr); SS = sessoes(anos)
     print("gastos (Portal da Transparência)…", file=sys.stderr); G = gastos(anos)
+    print("contratos no PNCP…", file=sys.stderr)
+    try:
+        G["pncp"] = pncp(anos)
+    except Exception as e:  # o PNCP às vezes fica fora do ar: o resto da coleta segue
+        print(f"  PNCP indisponível: {e}", file=sys.stderr)
+    print("atos da mesa…", file=sys.stderr); AT = atos_mesa(anos)
     print("propostas…", file=sys.stderr); M, T = materias(anos)
-    dados = {"coletado_em": datetime.now(timezone.utc).isoformat(), "fonte": BASE, "parlamentares": P, "mesa": MD, "sessoes": SS, "gastos": G, "materias": M,
+    dados = {"coletado_em": datetime.now(timezone.utc).isoformat(), "fonte": BASE, "parlamentares": P, "mesa": MD, "atos_mesa": AT, "sessoes": SS, "gastos": G, "materias": M,
              **{f"total{k}": v for k, v in T.items()}}
     json.dump(dados, open(a.saida, "w", encoding="utf-8"), ensure_ascii=False)
     print(f"ok: {len(P)} vereadores, {len(SS)} sessões, {len(M)} propostas", file=sys.stderr)

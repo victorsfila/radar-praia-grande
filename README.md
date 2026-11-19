@@ -20,6 +20,9 @@ Os gastos vêm da API de dados abertos do Portal da Transparência da Câmara
 (https://leideacesso.etransparencia.com.br/PraiaGrande.Camara.SP/tdaportalclient.aspx?418):
 contratos, cada empenho de despesa com seus pagamentos e modalidade de licitação, e diárias/adiantamentos.
 
+Os contratos com PDF e termos aditivos vêm da API pública do PNCP (Portal Nacional de Contratações Públicas, https://pncp.gov.br).
+Os projetos do Executivo e da Mesa vêm do sistema de propostas da Câmara, e os Atos da Mesa da seção de Normas.
+
 ## Regras
 
 - Só dado oficial. Cada número do site tem link para a fonte na Câmara.
@@ -38,7 +41,8 @@ coletor/conferir.py  recusa a coleta se ela vier incompleta ou estranha
 coletor/build.py     transforma os dados nos arquivos do site (site/dados/)
 coletor/classificar.py  regra única que separa as propostas em grupos
 coletor/enderecos.py    lê rua, bairro e tema de cada pedido
-coletor/gastos.py       organiza contratos, despesas e diárias
+coletor/gastos.py       organiza contratos (portal e PNCP), despesas e diárias
+coletor/poderes.py      projetos do Prefeito e da Mesa, Atos da Mesa e votos
 site/                o site (uma página só, sem servidor)
 ```
 

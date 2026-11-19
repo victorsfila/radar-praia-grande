@@ -6,6 +6,7 @@ import json, re, sys, os, unicodedata, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from classificar import classificar, GRUPOS, ORDEM, REGRA_TEXTO
 from gastos import build_gastos
+from poderes import build_poderes
 from collections import Counter, defaultdict
 from datetime import date
 
@@ -262,6 +263,7 @@ def main(src, out):
     }
     meta["busca"] = build_busca(raw, out)
     meta["gastos"] = build_gastos(raw.get("gastos"), out)
+    meta["poderes"] = build_poderes(raw, out, votacoes, parse_data)
     with open(os.path.join(out, "dados", "resumo.json"), "w", encoding="utf-8") as f:
         json.dump({"meta": meta, "vereadores": resumo}, f, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(out, "dados", "votos.json"), "w", encoding="utf-8") as f:
