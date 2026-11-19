@@ -88,9 +88,13 @@ def build_gastos(raw_gastos, out):
             cat = "Diárias, viagens e adiantamentos" if n in vgm_nums and categoria(d0.get("Natureza", "")) != "Pessoal, encargos e benefícios" else categoria(d0.get("Natureza", ""))
             nome, doc = separa_credor(d0.get("Credor", ""))
             emp = num(d0.get("Valor Empenhado"))
-            liq = sum(num(x.get("Valor Liquidado")) for x in linhas)
-            pago = sum(num(x.get("Valor Pago")) for x in linhas)
-            pags = [[x.get("Data Pagamento", ""), round(num(x.get("Valor Pago")), 2)] for x in linhas if x.get("Data Pagamento")]
+            # A API cruza cada liquidação com cada pagamento (2 x 2 = 4 linhas): conta cada um uma vez só.
+            liqs = {(x.get("Data Liquidação"), x.get("Valor Liquidado"), x.get("Nrp Docto Fiscal")) for x in linhas if x.get("Data Liquidação")}
+            pgs = sorted({(x.get("Data Pagamento"), x.get("Valor Pago"), x.get("Nrp Docto Fiscal")) for x in linhas if x.get("Data Pagamento")},
+                         key=lambda p: (p[0][6:] + p[0][3:5] + p[0][:2]) if p[0] else "")
+            liq = sum(num(x[1]) for x in liqs)
+            pago = sum(num(x[1]) for x in pgs)
+            pags = [[p[0], round(num(p[1]), 2)] for p in pgs]
             modal = d0.get("Modalidade de Licitação", "") or "Outros"
             e = {"a": ano, "n": n, "p": d0.get("Nro Processo", ""), "c": nome, "doc": doc, "d": d0.get("Descrição do Empenho", "").strip(),
                  "nat": d0.get("Natureza", ""), "cat": cat, "mod": modal, "dt": d0.get("Data Empenho", ""),
@@ -110,8 +114,10 @@ def build_gastos(raw_gastos, out):
         for n, linhas in por_vgm.items():
             d0 = linhas[0]
             nome, doc = separa_credor(d0.get("Beneficiário/Responsável", ""))
-            diarias.append({"a": ano, "n": n, "b": nome, "d": d0.get("Descrição do Empenho", "").strip(), "dt": d0.get("Data Empenho", ""),
-                            "emp": round(num(d0.get("Valor Empenhado")), 2), "pago": round(sum(num(x.get("Valor Pago")) for x in linhas), 2), "nat": d0.get("Natureza", "")})
+            pgs = {(x.get("Data Pagamento"), x.get("Valor Pago"), x.get("Nrp Docto Fiscal")) for x in linhas if x.get("Data Pagamento")}
+            tipo = "Diária de viagem" if "diaria" in _sa(d0.get("Natureza", "")) else "Adiantamento"
+            diarias.append({"a": ano, "n": n, "b": nome, "d": d0.get("Descrição do Empenho", "").strip(), "dt": d0.get("Data Empenho", ""), "tp": tipo,
+                            "emp": round(num(d0.get("Valor Empenhado")), 2), "pago": round(sum(num(p[1]) for p in pgs), 2), "nat": d0.get("Natureza", "")})
         anos[ano] = {"empenhado": round(tot["emp"], 2), "pago": round(tot["pago"], 2), "n_empenhos": len(por_emp),
                      "categorias": {k: round(v, 2) for k, v in cat_v.most_common()},
                      "modalidades": {k: [v[0], round(v[1], 2)] for k, v in sorted(mod_v.items(), key=lambda x: -x[1][1])},

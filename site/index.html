@@ -441,7 +441,7 @@ async function gastosPg(anoSel){
     <select id="fm"><option value="">Todas as modalidades</option>${Object.keys(A.modalidades).map(m => `<option value="${esc(m)}">${esc(modNome(m))}</option>`).join("")}</select></div>
     <div id="tot" class="nota"></div><div id="ld"></div>
     <h2>Diárias, viagens e adiantamentos</h2>
-    <p class="nota">Dinheiro adiantado a servidores e vereadores para viagens, cursos e pequenas despesas, com prestação de contas depois.</p>
+    <p class="nota">Dinheiro para viagens a serviço (diárias) e adiantamentos a servidores para pequenas despesas, com prestação de contas depois.</p>
     <div id="dv"></div>
     <p class="nota" style="margin-top:18px">Fonte: API de dados abertos do Portal da Transparência da Câmara (contratos, despesas e diárias). Os valores são os publicados pela Câmara. CPFs de pessoas físicas aparecem mascarados, como pede a LGPD. Os dados são atualizados junto com o resto do Radar.</p>`;
   const semAc = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -465,9 +465,10 @@ async function gastosPg(anoSel){
   qd.oninput = draw; fc.onchange = draw; fm.onchange = draw; draw();
   document.querySelectorAll("[data-f]").forEach(a => a.onclick = () => { qd.value = a.dataset.f; fc.value = ""; fm.value = ""; draw(); document.getElementById("desp").scrollIntoView({behavior:"smooth"}); });
   const D = GA.diarias.filter(x => x.a === ano).sort((a, b) => b.emp - a.emp);
-  const porB = {}; D.forEach(x => { porB[x.b] = porB[x.b] || [0, 0]; porB[x.b][0] += x.emp; porB[x.b][1]++; });
-  document.getElementById("dv").innerHTML = `<table class="tb"><tr><th>Responsável</th><th>Vezes</th><th style="text-align:right">Total</th></tr>${Object.entries(porB).sort((a, b) => b[1][0] - a[1][0]).slice(0, 20).map(([n, [v, k]]) => `<tr><td>${esc(n)}</td><td>${k}</td><td class="v">${brl(v)}</td></tr>`).join("")}</table>
-    <details class="grupo" style="margin-top:10px"><summary><div><h3>Ver cada adiantamento</h3></div><span class="q">${num(D.length)}</span></summary><ul class="lista">${D.map(x => `<li><div class="meta">Empenho ${esc(x.n)} · ${esc(x.dt)}</div><b>${esc(x.b)}</b> · ${esc(x.d)}<div>Empenhado ${brl(x.emp)} · pago ${brl(x.pago)}</div></li>`).join("")}</ul></details>`;
+  const porB = {}; D.forEach(x => { const p = porB[x.b] = porB[x.b] || {v:0, d:0, a:0}; p.v += x.emp; if(x.tp === "Diária de viagem") p.d++; else p.a++; });
+  document.getElementById("dv").innerHTML = `<table class="tb"><tr><th>Responsável</th><th>Diárias de viagem</th><th>Adiantamentos</th><th style="text-align:right">Total</th></tr>${Object.entries(porB).sort((a, b) => b[1].v - a[1].v).slice(0, 20).map(([n, p]) => `<tr><td>${esc(n)}</td><td>${p.d}</td><td>${p.a}</td><td class="v">${brl(p.v)}</td></tr>`).join("")}</table>
+    <p class="nota">Diária de viagem: dinheiro para viagem a serviço. Adiantamento: dinheiro adiantado a um servidor para pequenas compras do setor (material, serviços urgentes), com prestação de contas depois. A maior parte desta lista é de adiantamentos, não de viagens.</p>
+    <details class="grupo" style="margin-top:10px"><summary><div><h3>Ver cada adiantamento</h3></div><span class="q">${num(D.length)}</span></summary><ul class="lista">${D.map(x => `<li><div class="meta">Empenho ${esc(x.n)} · ${esc(x.dt)} · <span class="sgtag">${esc(x.tp || "")}</span></div><b>${esc(x.b)}</b> · ${esc(x.d)}<div>Empenhado ${brl(x.emp)} · pago ${brl(x.pago)}</div></li>`).join("")}</ul></details>`;
 }
 
 function como(){
